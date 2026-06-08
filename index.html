@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>피터 — 와이어프레임 v33</title>
+<style>
+  :root{--bg:#f5f6f9;--panel:#fff;--ink:#1f2430;--muted:#9197a6;--muted2:#b7bccb;
+    --line:#e6e9f0;--line2:#f0f2f7;--brand:#5b5bd6;--brand-soft:#edecfb;
+    --orange:#f06a2f;--green:#22a06b;--chip:#f2f3f8;--red:#e5484d;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Pretendard","Apple SD Gothic Neo",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);padding:24px;}
+  .wrap{max-width:1340px;margin:0 auto;}
+  .note h1{font-size:19px;margin:0 0 6px;}
+  .note p{margin:0 0 4px;color:var(--muted);font-size:13px;line-height:1.7;}
+  .tag{display:inline-block;background:var(--brand-soft);color:var(--brand);font-size:11px;
+    font-weight:700;padding:2px 8px;border-radius:6px;margin-right:6px;}
+  .infobox{background:#f0f9ff;border:1px solid #bae6fd;border-radius:9px;padding:10px 14px;
+    font-size:12.5px;color:#0c4a6e;margin-bottom:6px;line-height:1.7;}
+  .infobox b{color:#0369a1;}
+  .notice{background:#fffbeb;border:1px solid #fcd34d;border-radius:9px;padding:10px 14px;
+    font-size:12.5px;color:#92400e;margin-bottom:14px;line-height:1.7;}
+  .notice b{color:#b45309;}
+
+  /* MODE TABS */
+  .modetabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+  .modetabs button{border:1px solid var(--line);background:var(--panel);color:var(--muted);
+    font-family:inherit;font-weight:600;font-size:13px;padding:8px 16px;border-radius:10px;cursor:pointer;}
+  .modetabs button.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .modetabs .sep{color:var(--muted2);font-size:12px;padding:0 4px;}
+  .modetabs .hint{font-size:12px;color:var(--muted);font-style:italic;}
+
+  [data-tip]{position:relative;}
+  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);
+    left:50%;transform:translateX(-50%);background:#1f2430;color:#fff;font-size:11px;
+    padding:5px 9px;border-radius:6px;white-space:nowrap;z-index:299;pointer-events:none;}
+  [data-tip]:hover::before{content:"";position:absolute;bottom:calc(100% + 1px);left:50%;
+    transform:translateX(-50%);border:5px solid transparent;border-top-color:#1f2430;
+    z-index:299;pointer-events:none;}
+
+  /* APP SHELL */
+  .app{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;box-shadow:0 10px 30px rgba(30,36,48,.06);position:relative;}
+
+  /* ── TOPBAR ── */
+  .topbar{display:flex;align-items:center;gap:0;padding:0 18px;border-bottom:1px solid var(--line);
+    height:52px;flex-shrink:0;position:relative;z-index:20;}
+  .tb-logo-wrap{display:flex;align-items:center;gap:9px;margin-right:4px;}
+  .logo{width:26px;height:26px;border-radius:7px;background:var(--orange);display:grid;
+    place-items:center;color:#fff;font-weight:800;font-size:14px;}
+  .brandname{font-weight:800;font-size:15px;}
+  .topnav{display:flex;gap:2px;margin-left:6px;}
+  .topnav span{font-size:13px;color:#5b6170;padding:7px 11px;border-radius:8px;cursor:pointer;}
+  .topnav span.active{background:var(--brand);color:#fff;font-weight:600;}
+  .tb-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+  /* 접속 인원 */
+  .tb-online{display:flex;align-items:center;gap:5px;font-size:12.5px;color:#414756;}
+  .tb-online .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;}
+  .tb-online .cnt{font-weight:700;}
+  .tb-online .names{color:var(--muted);}
+  /* 날짜 바로가기 */
+  .tb-date{display:flex;align-items:center;gap:2px;font-size:12px;color:#5b6170;border:1px solid var(--line);
+    border-radius:7px;padding:4px 9px;cursor:pointer;}
+  .tb-date span{font-weight:700;color:var(--brand);}
+  /* 업무 생성 */
+  .tb-new{display:flex;align-items:center;gap:6px;background:var(--brand);color:#fff;
+    font-size:13px;font-weight:700;padding:7px 14px;border-radius:9px;cursor:pointer;}
+  .tb-new .plus{font-size:16px;font-weight:400;}
+  /* 아이콘 영역 */
+  .tb-icons{display:flex;align-items:center;gap:2px;}
+  .tb-ic{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;
+    color:var(--muted2);font-size:15px;cursor:pointer;}
+  .tb-ic:hover{background:var(--line2);}
+  .tb-ic.notif{position:relative;}
+  .tb-ic.notif::after{content:"5";position:absolute;top:3px;right:3px;width:15px;height:15px;
+    background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:50%;
+    display:grid;place-items:center;}
+  /* 확장 모드일 때 topbar를 피터 헤더로 전환 */
+  .topbar.peter-mode{background:var(--brand);border-bottom-color:rgba(255,255,255,.15);}
+  .topbar.peter-mode .tb-logo-wrap .logo{background:rgba(255,255,255,.2);}
+  .topbar.peter-mode .brandname{color:#fff;}
+  .topbar.peter-mode .topnav{display:none;}
+  .topbar.peter-mode .tb-right{display:none;}
+  .topbar.peter-mode .peter-topbar-right{display:flex;}
+  /* 확장 모드에서 피터 명칭 표시 */
+  .peter-label{display:none;align-items:center;gap:7px;margin-left:4px;}
+  .peter-label .pl-sep{color:rgba(255,255,255,.4);font-size:13px;}
+  .peter-label .pl-name{font-size:15px;font-weight:800;color:#fff;}
+  .peter-label .pl-sub{font-size:11px;color:rgba(255,255,255,.65);}
+  .topbar.peter-mode .peter-label{display:flex;}
+  /* 피터 헤더 우측 버튼 (기본: 숨김) */
+  .peter-topbar-right{display:none;align-items:center;gap:8px;margin-left:auto;}
+  .peter-topbar-right button{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);
+    color:#fff;font-family:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;
+    border-radius:8px;cursor:pointer;}
+  .peter-topbar-right button:hover{background:rgba(255,255,255,.22);}
+  .peter-topbar-right button.prim{background:#fff;color:var(--brand);border-color:#fff;}
+  .peter-topbar-right .close-btn{width:30px;height:30px;border-radius:8px;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);
+    color:#fff;display:grid;place-items:center;cursor:pointer;font-size:14px;}
+
+  /* ── BODY ── */
+  .body{display:flex;height:660px;}
+
+  /* SIDEBAR */
+  .sidebar{width:236px;border-right:1px solid var(--line);padding:14px 12px;
+    flex-shrink:0;display:flex;flex-direction:column;position:relative;z-index:10;}
+  .sidebar-top{flex:1;overflow:auto;}
+  /* 확장 모드에서 사이드바 내부 변형 */
+  .app.exp-active .dona-entry{display:none;} /* 피터 버튼 숨김 */
+  .app.exp-active .mode-memory{display:none;}
+  .app.exp-active .divider{display:none;}
+  .app.exp-active .exp-sidebar-top{display:flex;} /* 확장 전용 헤더 표시 */
+  .exp-sidebar-top{display:none;align-items:center;gap:8px;padding:8px 6px 12px;
+    border-bottom:1px solid var(--line2);margin-bottom:4px;}
+  .exp-sidebar-top .exp-back-btn{flex:1;display:flex;align-items:center;gap:6px;font-size:12px;
+    font-weight:600;color:var(--brand);background:var(--brand-soft);border-radius:9px;
+    padding:7px 11px;cursor:pointer;border:1px solid #cfcef6;}
+  .exp-sidebar-top .exp-back-btn:hover{background:#e0ddfd;}
+  .dona-entry{border:1px solid var(--brand);background:linear-gradient(180deg,#f6f5ff,#fff);
+    border-radius:12px;padding:10px 11px;display:flex;align-items:flex-start;gap:10px;
+    cursor:pointer;position:relative;transition:box-shadow .2s;}
+  .dona-entry:hover{box-shadow:0 0 0 3px var(--brand-soft);}
+  .dona-entry.active{box-shadow:0 0 0 3px var(--brand-soft);}
+  .dona-entry .ic{width:30px;height:30px;border-radius:8px;background:var(--orange);
+    display:grid;place-items:center;color:#fff;font-weight:800;flex-shrink:0;margin-top:1px;}
+  .dona-entry .tx{flex:1;min-width:0;}
+  .dona-entry .tx .de-top{display:flex;align-items:center;gap:6px;}
+  .dona-entry .tx b{font-size:13px;font-weight:800;}
+  .dona-entry .tx .de-role{font-size:10px;color:var(--brand);background:var(--brand-soft);
+    border-radius:5px;padding:1px 6px;font-weight:600;flex-shrink:0;}
+  .dona-entry .tx .de-conv{font-size:11px;color:var(--muted);margin-top:4px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dona-entry .tx .de-summary{display:none;}
+  .dona-entry .tx .de-expand{font-size:10.5px;color:var(--brand);font-weight:600;
+    margin-top:5px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+  .dona-entry .tx .de-expand:hover{text-decoration:underline;}
+  .dona-entry .badge{position:absolute;top:8px;right:8px;width:16px;height:16px;
+    border-radius:50%;background:var(--orange);color:#fff;font-size:10px;
+    display:grid;place-items:center;font-weight:700;}
+  /* 마지막 모드 기억 상태 표시 */
+  .mode-memory{font-size:10px;color:var(--brand);text-align:center;margin-top:5px;
+    display:flex;align-items:center;justify-content:center;gap:4px;}
+  .mode-memory .dot{width:5px;height:5px;border-radius:50%;background:var(--brand);}
+  .entry-hint{font-size:10.5px;color:var(--muted2);text-align:center;margin-top:4px;}
+  .divider{height:1px;background:var(--line2);margin:13px 4px;}
+  .folder-head{display:flex;align-items:center;justify-content:space-between;
+    padding:4px 6px;font-weight:700;font-size:13px;}
+  .folder-head .plus{width:20px;height:20px;border-radius:50%;background:var(--brand);
+    color:#fff;display:grid;place-items:center;font-size:13px;}
+  .frow{display:flex;align-items:center;gap:7px;padding:9px 8px;border-radius:8px;
+    font-size:13px;color:#414756;}
+  .frow.active{background:var(--brand-soft);color:var(--brand);font-weight:600;}
+  .frow .dot{width:7px;height:7px;border-radius:50%;background:#9aa0b3;}
+  .frow .dot.r{background:var(--red);}
+  .frow .dot.g{background:var(--green);}
+  .frow .dot.b{background:var(--brand);}
+  .frow .cnt{margin-left:auto;font-size:12px;color:var(--muted);}
+  .frow .badge2{font-size:10px;border:1px solid var(--line);border-radius:5px;
+    padding:1px 5px;color:var(--muted);}
+  .sidebar-bottom{border-top:1px solid var(--line2);padding-top:12px;margin-top:8px;}
+  .gov-btn{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:11px;
+    background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;
+    cursor:pointer;transition:box-shadow .15s;}
+  .gov-btn:hover{box-shadow:0 2px 10px rgba(14,165,233,.18);}
+  .gov-btn .gic{width:30px;height:30px;border-radius:8px;background:#0ea5e9;
+    display:grid;place-items:center;color:#fff;font-size:15px;flex-shrink:0;}
+  .gov-btn .gtx b{font-size:12.5px;display:block;color:#0c4a6e;}
+  .gov-btn .gtx small{font-size:10.5px;color:#0369a1;}
+  .gov-btn .gbadge{margin-left:auto;background:#0ea5e9;color:#fff;font-size:10px;
+    font-weight:700;padding:2px 7px;border-radius:20px;}
+
+  /* MAIN (dimmed list) */
+  .main{flex:1;padding:16px 18px;min-width:0;}
+  .perm{display:inline-block;background:var(--brand-soft);color:var(--brand);font-size:12px;
+    font-weight:600;padding:7px 14px;border-radius:9px;margin-bottom:12px;}
+  .listph{opacity:.45;}
+  .listph .lh{display:flex;gap:18px;font-size:12px;color:var(--muted);padding:8px 4px;
+    border-bottom:1px solid var(--line2);}
+  .listph .lr{display:flex;gap:18px;font-size:13px;padding:13px 4px;
+    border-bottom:1px solid var(--line2);color:#414756;}
+  .listph .lr .w1{width:26px;color:var(--muted);}
+  .listph .lr .w2{width:70px;color:var(--muted);}
+  .listph .lr .w3{flex:1;}
+
+  /* ===================== FLOATING MODE ===================== */
+  /* 우측 배치: 상단바(52px) 아래 20px 간격, 하단 고정바(52px) 위까지 */
+  .floating{position:absolute;top:72px;right:0;width:460px;
+    height:calc(100% - 72px - 52px);
+    background:#fff;border:1px solid var(--line);border-radius:12px;
+    box-shadow:-6px 4px 28px rgba(30,36,48,.16);
+    display:flex;flex-direction:column;z-index:200;overflow:visible;
+    transform:translateX(100%);opacity:0;
+    transition:transform .28s ease, opacity .22s ease;}
+  .floating.open{transform:translateX(-12px);opacity:1;}
+  .float-top{padding:12px 14px 10px;border-bottom:1px solid var(--line2);}
+  .float-titlerow{display:flex;align-items:center;gap:9px;}
+  .float-titlerow .ic{width:28px;height:28px;border-radius:8px;background:var(--orange);
+    display:grid;place-items:center;color:#fff;font-weight:800;}
+  .float-titlerow .tt{flex:1;}
+  .float-titlerow .tt b{font-size:15px;display:block;line-height:1.2;}
+  .float-titlerow .tt small{font-size:10.5px;color:var(--muted);}
+  .iconbtn{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;
+    background:#fff;color:#5b6170;display:grid;place-items:center;cursor:pointer;
+    font-size:14px;flex-shrink:0;}
+  .iconbtn.accent{color:var(--brand);border-color:#cfcef6;background:#f7f6ff;}
+  .float-conv-row{display:flex;align-items:center;gap:7px;margin-top:10px;position:relative;}
+  .conv-trigger{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 11px;
+    font-size:13px;display:flex;align-items:center;justify-content:space-between;
+    cursor:pointer;background:#fff;user-select:none;}
+  .conv-trigger .caret{color:var(--muted);font-size:11px;}
+
+  /* float body / suggest / input */
+  .float-body{flex:1;overflow:auto;padding:14px;position:relative;}
+  .drop-hint{position:absolute;inset:12px;border:2px dashed var(--brand);
+    border-radius:12px;background:rgba(91,91,214,.04);display:none;
+    place-items:center;text-align:center;font-size:13px;color:var(--brand);
+    font-weight:600;z-index:10;pointer-events:none;}
+  .drop-hint.show{display:grid;}
+  .day{text-align:center;font-size:11px;color:var(--muted2);margin:4px 0 12px;}
+  .msg{margin-bottom:13px;display:flex;}
+  .msg.me{justify-content:flex-end;}
+  .bubble{max-width:80%;padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.6;}
+  .msg.me .bubble{background:var(--brand);color:#fff;border-bottom-right-radius:4px;}
+  .msg.bot .bubble{background:var(--chip);color:var(--ink);border-bottom-left-radius:4px;}
+  .bot-name{font-size:11px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+  .ok{color:var(--green);font-size:10px;font-weight:700;}
+  .src{margin-top:7px;padding-top:7px;border-top:1px dashed #d9dbe6;font-size:11px;color:var(--muted);}
+  /* 파일칩: 텍스트와 별도 줄, 16px 간격 */
+  .file-chip-msg{display:flex;width:fit-content;align-items:center;gap:6px;
+    background:#f0eefb;border:1px solid #d4d2f7;border-radius:8px;padding:5px 9px;
+    font-size:12px;color:var(--brand);margin-top:16px;}
+  .suggest{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 11px;}
+  .suggest button{border:1px solid var(--line);background:#fafbfd;color:#414756;
+    font-family:inherit;font-size:12px;padding:7px 11px;border-radius:20px;cursor:pointer;}
+  .float-input{border-top:1px solid var(--line2);padding:12px 14px;position:relative;overflow:visible;}
+  .drag-drop-hint{font-size:11px;color:var(--muted2);text-align:center;padding:4px 0 8px;
+    display:flex;align-items:center;justify-content:center;gap:6px;}
+  .drag-drop-hint::before,.drag-drop-hint::after{content:"";flex:1;height:1px;background:var(--line2);}
+  /* 입력창 2줄 구조: 위=텍스트(가변높이+스크롤), 아래=기능 버튼 */
+  .inputbox{border:1px solid var(--line);border-radius:14px;padding:12px 14px 10px;
+    display:flex;flex-direction:column;gap:8px;background:#fff;transition:border-color .12s;}
+  .inputbox:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft);}
+  /* 텍스트 영역: 한 줄에서 시작, 늘어나면 위로 커지고 최대 높이 후 스크롤 */
+  .inputbox .ib-text{min-height:22px;max-height:120px;overflow-y:auto;
+    font-size:13px;line-height:1.6;color:var(--ink);outline:none;word-break:break-word;}
+  .inputbox .ib-text:empty::before{content:attr(data-ph);color:var(--muted);}
+  /* 아래: 기능 버튼 줄 (좌측 +·도구 / 우측 모드·음성·전송) */
+  .inputbox .ib-bar{display:flex;align-items:center;gap:9px;}
+  .inputbox .ib-bar .left{display:flex;align-items:center;gap:9px;}
+  .inputbox .ib-bar .right{margin-left:auto;display:flex;align-items:center;gap:9px;}
+  .inputbox .act{color:#8b91a1;font-size:16px;cursor:pointer;}
+  .inputbox .send{width:30px;height:30px;border-radius:9px;background:var(--brand);
+    color:#fff;display:grid;place-items:center;cursor:pointer;flex-shrink:0;}
+  /* 구버전 호환: .ph 단독 사용 시 */
+  .inputbox .ph{flex:1;color:var(--muted);font-size:13px;}
+
+  /* FILE DRAWER inside float — 오버레이, 우측 밀림 없음 */
+  .fdrawer{position:absolute;top:0;right:0;width:300px;height:100%;background:#fff;
+    border-left:1px solid var(--line);box-shadow:-8px 0 20px rgba(30,36,48,.10);
+    z-index:50;display:flex;flex-direction:column;
+    visibility:hidden;opacity:0;pointer-events:none;
+    transition:opacity .22s ease,visibility .22s ease;}
+  .fdrawer.open{visibility:visible;opacity:1;pointer-events:auto;}
+  .fdrawer-top{padding:12px 14px;border-bottom:1px solid var(--line2);
+    display:flex;align-items:center;gap:8px;}
+  .fdrawer-top b{font-size:14px;flex:1;}
+  .drawer-upload{margin:10px 14px 0;display:flex;align-items:center;gap:8px;
+    padding:9px 12px;border:1px dashed var(--brand);border-radius:10px;
+    background:#fafbff;cursor:pointer;font-size:12.5px;color:var(--brand);font-weight:600;}
+  .drawer-upload:hover{background:var(--brand-soft);}
+  .drawer-upload span{flex:1;}
+  .drawer-upload small{color:var(--muted2);font-size:11px;font-weight:400;}
+  .dtab{display:flex;gap:6px;padding:10px 14px 0;}
+  .dtab span{font-size:12px;padding:7px 11px;border-radius:8px;background:var(--chip);color:#5b6170;cursor:pointer;}
+  .dtab span.on{background:var(--brand);color:#fff;}
+  .dfilter{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;}
+  .dfilter span{font-size:11px;padding:5px 9px;border:1px solid var(--line);
+    border-radius:14px;color:#5b6170;cursor:pointer;}
+  .dfilter span.on{background:#f7f6ff;border-color:#cfcef6;color:var(--brand);font-weight:600;}
+  .dbody{flex:1;overflow:auto;padding:4px 14px 14px;}
+  .filecard{border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-bottom:9px;}
+  .filecard .fn{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;}
+  .filecard .star{margin-left:auto;color:#f0b429;cursor:pointer;}
+  .filecard .meta{display:flex;align-items:center;gap:8px;margin-top:6px;}
+  .filecard .lab{font-size:10px;background:var(--chip);color:#6b7180;padding:2px 6px;border-radius:5px;}
+  .filecard .time{font-size:10.5px;color:var(--muted2);}
+  .filecard .acts{display:flex;gap:7px;margin-top:9px;}
+  .filecard .acts button{flex:1;border:1px solid var(--line);background:#fafbfd;
+    font-family:inherit;font-size:11px;color:#414756;padding:6px;border-radius:7px;cursor:pointer;}
+  .filecard .acts button.p{background:var(--brand);color:#fff;border-color:var(--brand);}
+
+  /* ===================== EXPANDED MODE ===================== */
+  @keyframes expFadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .exp-wrap{display:none;}
+  .exp-wrap.show{animation:expFadeIn .22s ease forwards;}
+  /* 확장 모드 배경: 아주 연한 보라 — 기존 흰 배경과 미세하게 다름 */
+  /* 상단 브랜드 컬러 헤더 바 */
+  .exp-top{display:flex;align-items:center;gap:11px;padding:14px 20px;
+    background:var(--brand);border-bottom:none;}
+  .exp-top .ic{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.2);
+    display:grid;place-items:center;color:#fff;font-weight:800;}
+  .exp-top b{font-size:16px;color:#fff;}
+  /* 헤더 안 "내 업무 동료" 보조 텍스트 */
+  .exp-top .sub{font-size:11px;color:rgba(255,255,255,.65);margin-left:2px;font-weight:400;}
+  .exp-top .right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+  .exp-top .right button{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);
+    font-family:inherit;font-size:12px;font-weight:600;color:#fff;
+    padding:8px 12px;border-radius:9px;cursor:pointer;transition:background .15s;}
+  .exp-top .right button:hover{background:rgba(255,255,255,.22);}
+  .exp-top .right button.prim{background:#fff;color:var(--brand);border-color:#fff;}
+  .exp-top .right button.prim:hover{background:#f0eefb;}
+  .exp-top .close-btn{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.25);color:#fff;display:grid;place-items:center;
+    cursor:pointer;font-size:14px;}
+  .exp-top .close-btn:hover{background:rgba(255,255,255,.25);}
+  /* 확장 모드 본문 배경 연보라 */
+  .exp-body{display:flex;height:660px;background:#faf9ff;}
+  .ecol{padding:14px;overflow:auto;background:#fff;}
+  .eleft{width:252px;border-right:1px solid var(--line);display:flex;flex-direction:column;background:#faf9ff;}
+  .eleft-top{flex:1;overflow:auto;}
+  .emid{flex:1;border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:visible;}
+  .eright{width:300px;}
+  .col-title{font-size:12px;color:var(--muted);font-weight:700;margin:0 0 10px;
+    display:flex;justify-content:space-between;align-items:center;}
+  .col-title .mk{color:var(--brand);cursor:pointer;font-weight:600;font-size:12px;}
+  .efg .efhead{display:flex;align-items:center;gap:6px;padding:8px;border-radius:8px;
+    font-size:12.5px;font-weight:600;color:#414756;cursor:pointer;}
+  .efg .efhead:hover{background:#f7f8fb;}
+  .efg .efhead .efmore{margin-left:auto;color:var(--muted2);font-size:13px;}
+  .econv{padding:9px 10px 9px 26px;border-radius:9px;font-size:13px;cursor:pointer;
+    margin-bottom:3px;display:flex;align-items:center;gap:6px;}
+  .econv .pname{flex:1;}
+  .econv .emore{color:var(--muted2);}
+  .econv:hover{background:var(--brand-soft);}
+  .econv.on{background:var(--brand-soft);color:var(--brand);font-weight:600;}
+  .enew{border:1px dashed var(--brand);color:var(--brand);border-radius:9px;
+    padding:9px 10px;font-size:13px;text-align:center;margin-bottom:10px;
+    cursor:pointer;font-weight:600;}
+  .sh-on{font-size:10px;color:#6b7280;border:1px solid #d1d5db;border-radius:4px;
+    padding:1px 6px;white-space:nowrap;flex-shrink:0;}
+  .sh-off{font-size:10px;color:var(--red);border:1px solid #fca5a5;border-radius:4px;
+    padding:1px 6px;white-space:nowrap;flex-shrink:0;}
+  .emid-msgs{flex:1;overflow:auto;padding:6px 14px;}
+  .emid-input{border-top:1px solid var(--line2);padding:10px 14px;position:relative;overflow:visible;}
+  .rcard{border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:10px;}
+  .rcard h6{margin:0 0 8px;font-size:12px;color:var(--muted);font-weight:700;}
+  .rtab{display:flex;gap:6px;margin-bottom:10px;}
+  .rtab span{font-size:12px;padding:6px 10px;border-radius:8px;background:var(--chip);
+    color:#5b6170;cursor:pointer;}
+  .rtab span.on{background:var(--brand);color:#fff;}
+  .filechip{display:flex;align-items:center;gap:8px;font-size:12px;padding:8px;
+    border:1px solid var(--line2);border-radius:8px;margin-bottom:6px;}
+  .filechip .lab{margin-left:auto;font-size:10px;background:var(--chip);
+    color:#6b7180;padding:2px 6px;border-radius:5px;}
+
+  /* POPOVER */
+  .popover{position:absolute;top:44px;left:0;width:280px;background:#fff;
+    border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 16px 40px rgba(30,36,48,.18);padding:10px;z-index:300;}
+  .popover h5{margin:2px 4px 8px;font-size:12px;color:var(--muted);}
+  .psearch{width:100%;border:1px solid var(--line);border-radius:8px;
+    padding:7px 9px;font-size:12px;margin-bottom:8px;}
+  .pnewrow{display:flex;gap:6px;margin-bottom:8px;}
+  .pnew{flex:1;text-align:center;font-size:12px;font-weight:600;color:var(--brand);
+    border:1px dashed #cfcef6;border-radius:8px;padding:7px;cursor:pointer;}
+  .pnew:hover{background:var(--brand-soft);}
+  .fgroup{margin-bottom:2px;}
+  .fhead{display:flex;align-items:center;gap:6px;padding:7px 8px;border-radius:7px;
+    font-size:12.5px;font-weight:600;color:#414756;cursor:pointer;user-select:none;}
+  .fhead:hover{background:#f7f8fb;}
+  .fhead .arr{font-size:10px;color:var(--muted2);width:10px;flex-shrink:0;}
+  .fhead .fname{flex:1;}
+  .fhead .fcnt{font-size:11px;color:var(--muted);font-weight:400;}
+  .fmore{color:var(--muted2);padding:2px 7px;border-radius:5px;font-size:13px;
+    cursor:pointer;flex-shrink:0;}
+  .fmore:hover{background:#e8e7fb;color:var(--brand);}
+  .pitem{display:flex;align-items:center;padding:8px;border-radius:7px;
+    font-size:13px;cursor:pointer;gap:6px;}
+  .pitem:hover{background:var(--brand-soft);}
+  .pitem.indent{margin-left:16px;}
+  .pitem.on{background:var(--brand-soft);color:var(--brand);font-weight:600;}
+  .pitem .pname{flex:1;}
+  .pmore{color:var(--muted2);padding:2px 7px;border-radius:5px;font-size:13px;
+    cursor:pointer;flex-shrink:0;}
+  .pmore:hover{background:#e8e7fb;color:var(--brand);}
+  .pfoot{border-top:1px solid var(--line2);margin-top:6px;padding-top:8px;font-size:12.5px;
+    color:var(--brand);text-align:center;cursor:pointer;font-weight:600;}
+  .pfoot:hover{text-decoration:underline;}
+
+  /* CONTEXT / MOVE */
+  .ctx{position:fixed;background:#fff;border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 14px 34px rgba(30,36,48,.2);padding:6px;z-index:400;width:200px;display:none;}
+  .ctx.show{display:block;}
+  .ci{padding:8px 11px;border-radius:7px;font-size:13px;cursor:pointer;color:var(--ink);}
+  .ci:hover{background:var(--brand-soft);}
+  .ci.danger{color:var(--red);}
+  .ci.danger:hover{background:#fdeaea;}
+  .csep{height:1px;background:var(--line2);margin:4px 2px;}
+  .move-panel{position:fixed;background:#fff;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 16px 40px rgba(30,36,48,.22);padding:10px;z-index:410;width:220px;display:none;}
+  .move-panel.show{display:block;}
+  .move-panel h6{margin:2px 4px 8px;font-size:12px;color:var(--muted);font-weight:700;}
+  .mitem{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;font-size:13px;cursor:pointer;}
+  .mitem:hover{background:var(--brand-soft);}
+  .mitem .mcheck{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--line);
+    display:grid;place-items:center;flex-shrink:0;font-size:10px;}
+  .mitem .mcheck.on{background:var(--brand);border-color:var(--brand);color:#fff;}
+  .mitem.disabled{opacity:.45;cursor:not-allowed;}
+  .mitem.disabled:hover{background:transparent;}
+  .msep{height:1px;background:var(--line2);margin:4px 2px;}
+  .move-panel .mfoot{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line2);}
+  .move-panel .mfoot button{flex:1;padding:7px;border-radius:8px;font-family:inherit;
+    font-size:12px;font-weight:600;cursor:pointer;}
+  .move-panel .mfoot .mcancel{border:1px solid var(--line);background:#fff;color:var(--muted);}
+  .move-panel .mfoot .mok{border:none;background:var(--brand);color:#fff;}
+
+  /* ===================== SPLIT MODE (분할 뷰) ===================== */
+  @keyframes splitFadeIn{from{opacity:0;}to{opacity:1;}}
+  /* 분할 모드: .main 영역을 대체 (사이드바는 그대로 노출) */
+  .split-wrap{display:none;position:absolute;top:52px;left:0;right:0;bottom:0;
+    flex-direction:row;z-index:150;--split-left-w:340px;}
+  .split-wrap.show{display:flex;}
+  /* 분할 모드 사이드바 (폴더 패널 + 정부지원사업) */
+  .sw-sidebar{width:200px;flex-shrink:0;background:#fff;border-left:1px solid var(--line);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;padding:14px 12px;}
+  .sw-sidebar .folder-head{display:flex;align-items:center;justify-content:space-between;
+    padding:4px 6px;font-weight:700;font-size:13px;margin-bottom:4px;}
+  .sw-sidebar .folder-head .plus{width:20px;height:20px;border-radius:50%;background:var(--brand);
+    color:#fff;display:grid;place-items:center;font-size:13px;cursor:pointer;}
+  .sw-sidebar .frow{display:flex;align-items:center;gap:7px;padding:8px 8px;border-radius:8px;
+    font-size:13px;color:#414756;cursor:pointer;}
+  .sw-sidebar .frow.active{background:var(--brand-soft);color:var(--brand);font-weight:600;}
+  .sw-sidebar .frow .dot{width:7px;height:7px;border-radius:50%;background:#9aa0b3;}
+  .sw-sidebar .frow .dot.r{background:var(--red);}
+  .sw-sidebar .frow .dot.g{background:var(--green);}
+  .sw-sidebar .frow .dot.b{background:var(--brand);}
+  .sw-sidebar .frow .cnt{margin-left:auto;font-size:12px;color:var(--muted);}
+  .sw-sidebar .frow .badge2{font-size:10px;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--muted);}
+  .sw-sidebar-bottom{border-top:1px solid var(--line2);padding-top:10px;margin-top:auto;}
+  .sw-sidebar-bottom .gov-btn{display:flex;align-items:center;gap:8px;padding:9px 10px;
+    border-radius:10px;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);
+    border:1px solid #bae6fd;cursor:pointer;}
+  .sw-sidebar-bottom .gov-btn .gic{width:26px;height:26px;border-radius:7px;background:#0ea5e9;
+    display:grid;place-items:center;color:#fff;font-size:13px;flex-shrink:0;}
+  .sw-sidebar-bottom .gov-btn .gtx b{font-size:11.5px;display:block;color:#0c4a6e;}
+  .sw-sidebar-bottom .gov-btn .gtx small{font-size:10px;color:#0369a1;}
+  .sw-sidebar-bottom .gov-btn .gbadge{margin-left:auto;background:#0ea5e9;color:#fff;
+    font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;}
+  /* 리사이저 핸들 */
+  .split-resizer{width:6px;flex-shrink:0;background:#fff;cursor:col-resize;
+    position:relative;z-index:10;transition:background .15s;border-left:1px solid var(--line);border-right:1px solid var(--line);}
+  .split-resizer:hover, .split-resizer.dragging{background:var(--brand);}
+  .split-resizer::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:3px;height:40px;border-radius:2px;background:var(--line);transition:background .15s;}
+  .split-resizer:hover::after, .split-resizer.dragging::after{background:var(--brand);}
+  .split-left{width:var(--split-left-w);min-width:320px;background:#fff;border-right:none;
+    display:flex;flex-direction:column;position:relative;flex-shrink:0;overflow:visible;}
+  /* 분할 모드 파일·자료 패널 — split-left 전체 덮음 */
+  .split-file-panel{position:absolute;inset:0;background:#fff;z-index:50;display:none;
+    flex-direction:column;border-right:2px solid var(--line);}
+  .split-file-panel.show{display:flex;}
+  .sfp-head{display:flex;align-items:center;gap:10px;padding:13px 16px;
+    border-bottom:1px solid var(--line2);background:#fff;}
+  .sfp-head b{font-size:14px;color:var(--ink);}
+  .sl-top{display:flex;align-items:center;gap:9px;padding:13px 16px;
+    background:var(--brand);color:#fff;}
+  .sl-top .ic{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.2);
+    display:grid;place-items:center;font-weight:800;}
+  .sl-top .tt{flex:1;}
+  .sl-top .tt b{font-size:14px;display:block;line-height:1.2;}
+  .sl-top .tt small{font-size:10.5px;color:rgba(255,255,255,.7);}
+  .sl-top .sl-btn{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.28);color:#fff;display:grid;place-items:center;
+    cursor:pointer;font-size:13px;}
+  .sl-top .sl-btn:hover{background:rgba(255,255,255,.26);}
+  .sl-convrow{display:flex;align-items:center;gap:7px;padding:10px 16px;
+    border-bottom:1px solid var(--line2);background:#faf9ff;position:relative;}
+  .sl-body{flex:1;overflow:auto;padding:16px;}
+  .sl-suggest{display:flex;flex-wrap:wrap;gap:7px;padding:0 16px 10px;}
+  .sl-suggest button{border:1px solid var(--line);background:#fafbfd;color:#414756;
+    font-family:inherit;font-size:12px;padding:7px 11px;border-radius:20px;cursor:pointer;}
+  .sl-input{border-top:1px solid var(--line2);padding:12px 16px;}
+  /* 우: 업무 보드 */
+  .split-right{flex:1;display:flex;flex-direction:column;background:var(--bg);min-width:0;position:relative;}
+  .sr-top{display:flex;align-items:center;gap:12px;padding:13px 18px;
+    background:#fff;border-bottom:1px solid var(--line);}
+  .sr-top .logo{width:24px;height:24px;border-radius:6px;background:var(--brand);
+    display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px;}
+  .sr-top .sr-title{font-weight:800;font-size:14px;}
+  .sr-tabs{display:flex;gap:2px;margin-left:8px;}
+  .sr-tabs span{font-size:12.5px;color:#5b6170;padding:6px 11px;border-radius:8px;cursor:pointer;}
+  .sr-tabs span.on{background:var(--brand);color:#fff;font-weight:600;}
+  .sr-body{flex:1;overflow:auto;padding:16px 18px;}
+  /* 칸반 */
+  .kanban{display:flex;gap:14px;height:100%;}
+  .kcol{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:12px;display:flex;flex-direction:column;}
+  .kcol-head{display:flex;align-items:center;gap:7px;font-weight:700;font-size:13px;
+    margin-bottom:11px;}
+  .kcol-head .kdot{width:8px;height:8px;border-radius:50%;}
+  .kcol-head .kcnt{margin-left:auto;font-size:12px;color:var(--muted);}
+  .kcard{border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:9px;cursor:pointer;
+    transition:box-shadow .15s,border-color .15s;}
+  .kcard:hover{box-shadow:0 3px 12px rgba(30,36,48,.1);border-color:#cfcef6;}
+  .kcard .kc-no{font-size:11px;color:var(--muted2);margin-bottom:5px;}
+  .kcard .kc-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:9px;}
+  .kcard .kc-meta{display:flex;align-items:center;gap:8px;}
+  .kcard .kc-owner{font-size:11px;color:#5b6170;}
+  .kcard .kc-prog{flex:1;height:5px;background:#eef0f5;border-radius:3px;overflow:hidden;}
+  .kcard .kc-prog i{display:block;height:100%;background:var(--brand);border-radius:3px;}
+  .kcard .kc-pct{font-size:11px;color:var(--muted);}
+  .kcard .kc-late{font-size:11px;color:var(--red);font-weight:600;margin-top:6px;}
+  .kcol.todo .kdot{background:#9aa0b3;} .kcol.todo .kcard{border-left:none;}
+  .kcol.doing .kdot{background:var(--brand);} .kcol.doing{background:#f7f8ff;}
+  .kcol.done .kdot{background:var(--green);}
+  /* 업무 패널 — 업무 보드 영역 내 우측에만 오버레이, 피터 영역 침범 X */
+  .task-overlay{position:absolute;top:0;right:0;width:67%;height:100%;
+    background:transparent;display:none;z-index:200;}
+  .task-overlay.show{display:flex;flex-direction:column;}
+  .task-modal{width:100%;height:100%;background:#fff;border-radius:0;
+    overflow:hidden;display:flex;box-shadow:-8px 0 30px rgba(30,36,48,.14);}
+  /* 좌(가운데): 업무 상세 폼 */
+  .tm-detail{flex:1;display:flex;flex-direction:column;border-right:1px solid var(--line);min-width:0;}
+  .tm-dhead{display:flex;align-items:center;gap:10px;padding:12px 16px;
+    border-bottom:1px solid var(--line2);flex-shrink:0;}
+  .tm-dhead .tm-no{font-size:12px;color:var(--brand);font-weight:700;flex-shrink:0;}
+  .tm-dhead b{font-size:15px;flex:1;min-width:0;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap;}
+  .tm-dhead .tm-save{font-size:11px;color:var(--green);font-weight:600;flex-shrink:0;}
+  .tm-dhead .tm-close{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);
+    background:#fff;color:#5b6170;display:grid;place-items:center;cursor:pointer;flex-shrink:0;}
+  .tm-dbody{flex:1;overflow:auto;padding:20px;}
+  .tm-field{margin-bottom:18px;}
+  .tm-field label{display:block;font-size:12px;font-weight:700;color:#414756;margin-bottom:7px;}
+  .tm-field input[type=text],.tm-field textarea,.tm-sel{width:100%;border:1px solid var(--line);
+    border-radius:9px;padding:9px 12px;font-size:13px;font-family:inherit;color:var(--ink);background:#fff;}
+  .tm-field textarea{min-height:70px;resize:vertical;}
+  .tm-grid{display:flex;gap:10px;}
+  .tm-grid .tm-col{flex:1;}
+  .tm-grid .tm-col label{font-size:11px;font-weight:700;color:#414756;margin-bottom:6px;display:block;}
+  .tm-members{border:1px solid var(--line);border-radius:11px;padding:12px;}
+  .tm-members .tmm-head{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:10px;}
+  .tm-members .tmm-head span{color:var(--muted);font-weight:400;font-size:12px;}
+  .tm-chip{display:inline-flex;align-items:center;gap:5px;background:#f0f2f7;border-radius:8px;
+    padding:5px 10px;font-size:12px;margin-right:6px;margin-bottom:6px;}
+  .tm-chip .x{color:var(--muted2);cursor:pointer;}
+  .tm-status-seg{display:flex;gap:8px;}
+  .tm-status-seg .so{flex:1;text-align:center;font-size:12.5px;font-weight:600;color:#5b6170;
+    border:1px solid var(--line);border-radius:9px;padding:9px;cursor:pointer;}
+  .tm-status-seg .so.on{background:#eef2ff;border-color:var(--brand);color:var(--brand);}
+  /* 우: 업무별 도나 어시스트 */
+  .tm-dona{width:300px;min-width:260px;flex-shrink:0;display:flex;flex-direction:column;background:#fafbff;}
+  .tm-dona-head{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line2);}
+  .tm-dona-head b{font-size:14px;flex:1;}
+  .tm-dona-head .role{font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 7px;}
+  .tm-dona-tabs{display:flex;gap:6px;padding:10px 16px 0;}
+  .tm-dona-tabs span{flex:1;text-align:center;font-size:12.5px;padding:8px;border-radius:8px;
+    background:#fff;border:1px solid var(--line);color:#5b6170;cursor:pointer;}
+  .tm-dona-tabs span.on{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600;}
+  .tm-dona-body{flex:1;overflow:auto;padding:14px 16px;}
+  .tm-dona-input{border-top:1px solid var(--line2);padding:12px 16px;}
+  .tm-note{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:9px 11px;
+    font-size:11px;color:#0c4a6e;line-height:1.5;margin-bottom:12px;}
+
+  /* 리스트 뷰 */
+  .list-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .list-table th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;
+    padding:8px 12px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;}
+  .list-table td{padding:11px 12px;border-bottom:1px solid var(--line2);color:var(--ink);vertical-align:middle;}
+  .list-table tr{background:#fff;cursor:pointer;transition:background .1s;}
+  .list-table tr:hover{background:var(--brand-soft);}
+  .list-table tr.selected{background:#eef1ff;}
+  .lrow-drag{color:var(--muted2);font-size:12px;width:20px;}
+  .lrow-num{color:var(--muted2);font-size:12px;width:40px;}
+  .lrow-name{font-weight:500;}
+  .lrow-status{width:80px;}
+  .lrow-owner{width:60px;font-size:12px;color:#5b6170;}
+  .lrow-d{width:60px;font-size:12px;color:var(--muted);}
+  .lrow-more{width:30px;color:var(--muted2);text-align:center;}
+  .status-chip{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;}
+  .sc-todo{background:#f0f2f7;color:#5b6170;}
+  .sc-doing{background:#eef0ff;color:var(--brand);}
+  .sc-done{background:#e6f7ef;color:var(--green);}
+  .sr-stat{display:flex;align-items:center;gap:8px;padding:8px 18px;border-bottom:1px solid var(--line2);
+    font-size:12px;color:var(--muted);background:#fff;}
+  .sr-stat .pct{font-weight:700;color:var(--brand);}
+  .sr-stat .tag{display:inline-block;padding:3px 8px;border-radius:5px;font-size:11.5px;
+    font-weight:600;margin-left:4px;}
+  .sr-stat .t-todo{background:#f0f2f7;color:#5b6170;}
+  .sr-stat .t-doing{background:#eef0ff;color:var(--brand);}
+  .sr-stat .t-done{background:#e6f7ef;color:var(--green);}
+  /* 업무 패널이 열렸을 때 리스트에 선택 효과 */
+  .task-overlay.show ~ * .list-wrap{filter:none;}
+
+  /* ===================== SETTINGS MODAL (⚙ 전체 설정) ===================== */
+  .modal-overlay{position:fixed;inset:0;background:rgba(31,36,48,.45);
+    display:none;align-items:center;justify-content:center;z-index:500;}
+  .modal-overlay.show{display:flex;}
+  .modal{width:560px;max-width:92vw;max-height:86vh;background:#fff;border-radius:16px;
+    box-shadow:0 24px 60px rgba(30,36,48,.3);display:flex;flex-direction:column;overflow:hidden;
+    animation:expFadeIn .2s ease;}
+  .modal-head{display:flex;align-items:center;gap:10px;padding:16px 20px;
+    background:var(--brand);color:#fff;}
+  .modal-head .mh-ic{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.2);
+    display:grid;place-items:center;font-size:15px;}
+  .modal-head b{font-size:15px;flex:1;}
+  .modal-head .mh-close{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.15);
+    border:1px solid rgba(255,255,255,.25);color:#fff;display:grid;place-items:center;
+    cursor:pointer;font-size:14px;}
+  .modal-tabs{display:flex;gap:4px;padding:12px 18px 0;border-bottom:1px solid var(--line2);}
+  .modal-tabs .mt{font-size:12.5px;font-weight:600;color:var(--muted);padding:9px 14px;
+    border-radius:9px 9px 0 0;cursor:pointer;border-bottom:2px solid transparent;}
+  .modal-tabs .mt.on{color:var(--brand);border-bottom-color:var(--brand);background:var(--brand-soft);}
+  .modal-body{padding:20px;overflow:auto;}
+  .mpane{display:none;}
+  .mpane.on{display:block;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:7px;}
+  .field .desc{font-size:11px;color:var(--muted);margin-bottom:7px;line-height:1.5;}
+  .field input[type=text], .field textarea{width:100%;border:1px solid var(--line);
+    border-radius:9px;padding:10px 12px;font-size:13px;font-family:inherit;color:var(--ink);resize:vertical;}
+  .field textarea{min-height:90px;line-height:1.6;}
+  .field input[type=text]:focus, .field textarea:focus{outline:none;border-color:var(--brand);
+    box-shadow:0 0 0 3px var(--brand-soft);}
+  .seg{display:flex;gap:6px;}
+  .seg .so{flex:1;text-align:center;font-size:12px;font-weight:600;color:#5b6170;
+    border:1px solid var(--line);border-radius:8px;padding:8px;cursor:pointer;}
+  .seg .so.on{background:var(--brand);color:#fff;border-color:var(--brand);}
+  /* 보안 정보 */
+  .sec-warn{background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:9px 12px;
+    font-size:11.5px;color:#92400e;line-height:1.6;margin-bottom:14px;}
+  .sec-item{display:flex;align-items:center;gap:8px;border:1px solid var(--line);
+    border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+  .sec-item .si-key{font-size:12px;font-weight:700;color:var(--ink);width:90px;flex-shrink:0;}
+  .sec-item .si-val{flex:1;font-size:12px;color:#5b6170;}
+  .sec-item .si-toggle{display:flex;align-items:center;gap:6px;font-size:10.5px;flex-shrink:0;}
+  .toggle{width:34px;height:19px;border-radius:20px;background:#cfd3de;position:relative;
+    cursor:pointer;transition:background .15s;flex-shrink:0;}
+  .toggle.on{background:var(--green);}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;
+    border-radius:50%;background:#fff;transition:left .15s;}
+  .toggle.on::after{left:17px;}
+  .sec-item .si-more{color:var(--muted2);cursor:pointer;padding:2px 6px;flex-shrink:0;}
+  .add-sec{border:1px dashed var(--brand);color:var(--brand);border-radius:9px;
+    padding:9px;font-size:12.5px;font-weight:600;text-align:center;cursor:pointer;margin-top:4px;}
+  .add-sec:hover{background:var(--brand-soft);}
+  .data-row{display:flex;align-items:center;justify-content:space-between;
+    border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+  .data-row .dr-tx b{font-size:12.5px;color:var(--ink);display:block;}
+  .data-row .dr-tx small{font-size:11px;color:var(--muted);}
+  .data-row button{border:1px solid var(--line);background:#fff;font-family:inherit;
+    font-size:12px;font-weight:600;color:#5b6170;padding:7px 12px;border-radius:8px;cursor:pointer;}
+  .data-row button.danger{color:var(--red);border-color:#fca5a5;}
+  .modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;
+    border-top:1px solid var(--line2);}
+  .modal-foot button{font-family:inherit;font-size:13px;font-weight:600;
+    padding:9px 18px;border-radius:9px;cursor:pointer;}
+  .modal-foot .btn-ghost{border:1px solid var(--line);background:#fff;color:#5b6170;}
+  .modal-foot .btn-prim{border:none;background:var(--brand);color:#fff;}
+
+  /* ===================== CONV PROMPT PANEL (✨ 대화별) ===================== */
+  .cp-modal{width:480px;max-width:92vw;}
+  .cp-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
+    padding:4px 10px;border-radius:20px;margin-bottom:14px;}
+  .cp-status.base{background:#f0f2f7;color:#5b6170;}
+  .cp-status.custom{background:var(--brand-soft);color:var(--brand);}
+  .cp-info{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 12px;
+    font-size:11.5px;color:#0c4a6e;line-height:1.6;margin-bottom:16px;}
+
+  /* ===================== 에이전트 설정 카드 (확장 모드 우측) ===================== */
+  .agent-card{border:1px solid #cfcef6;border-radius:11px;padding:12px;margin-bottom:10px;
+    background:linear-gradient(180deg,#faf9ff,#fff);}
+  .agent-card .ac-head{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
+  .agent-card .ac-head .ac-ic{font-size:14px;}
+  .agent-card .ac-head b{font-size:12.5px;color:var(--ink);flex:1;}
+  .agent-card .ac-head .ac-edit{font-size:11px;color:var(--brand);font-weight:600;cursor:pointer;
+    border:1px solid #cfcef6;border-radius:7px;padding:4px 9px;background:#fff;}
+  .agent-card .ac-edit:hover{background:var(--brand-soft);}
+  .agent-now{font-size:11.5px;color:#5b6170;background:#fff;border:1px solid var(--line);
+    border-radius:8px;padding:8px 10px;line-height:1.55;}
+  .agent-now .tagx{display:inline-block;font-size:10px;font-weight:700;color:var(--brand);
+    background:var(--brand-soft);border-radius:5px;padding:1px 6px;margin-right:5px;}
+  /* 우선순위 안내 */
+  .prio-guide{margin-top:10px;}
+  .prio-guide .pg-title{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;}
+  .prio-step{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#414756;
+    padding:7px 9px;border-radius:8px;margin-bottom:5px;line-height:1.45;}
+  .prio-step .num{width:17px;height:17px;border-radius:50%;display:grid;place-items:center;
+    font-size:10px;font-weight:700;color:#fff;flex-shrink:0;margin-top:1px;}
+  .prio-step.s1{background:var(--brand-soft);}
+  .prio-step.s1 .num{background:var(--brand);}
+  .prio-step.s2{background:#eef6ff;}
+  .prio-step.s2 .num{background:#4a86e8;}
+  .prio-step.s3{background:#f3f4f7;}
+  .prio-step.s3 .num{background:#9197a6;}
+  .prio-step b{color:var(--ink);}
+  .prio-note{font-size:10.5px;color:var(--muted);font-style:italic;margin-top:6px;line-height:1.5;}
+  .legend{font-size:12px;color:var(--muted);line-height:1.9;margin-top:14px;}
+  .legend b{color:var(--ink);}
+
+  /* ===================== 작업 모드 선택 (질문 전) ===================== */
+  /* ===================== 답변 모드 선택 (입력창 버튼 + 팝업) ===================== */
+  /* 입력창 내 모드 버튼 (음성 버튼 왼쪽) */
+  .mode-btn{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+    padding:5px 10px;border-radius:18px;border:1px solid var(--line);background:#fff;
+    color:#5b6170;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .12s;
+    position:relative;}
+  .mode-btn:hover{border-color:#cfcef6;background:#faf9ff;}
+  .mode-btn.active-quick{border-color:#fcd34d;background:#fffbeb;color:#b45309;}
+  .mode-btn.active-together{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);}
+  .mode-btn.active-full{border-color:#a78bfa;background:#f3f0ff;color:#6d28d9;}
+  .mode-btn .mb-ic{font-size:12px;}
+  .mode-btn .mb-caret{font-size:8px;opacity:.6;}
+  /* 모드 선택 팝업 패널 */
+  .mode-pop{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+    width:220px;background:#fff;
+    border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 32px rgba(30,36,48,.18);
+    padding:6px;z-index:1000;display:none;}
+  .mode-pop.show{display:block;}
+  .mode-pop-hint{display:none;}
+  .mode-opt{display:flex;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;
+    align-items:center;position:relative;}
+  .mode-opt:hover{background:#f7f8fb;}
+  .mode-opt.on{background:var(--brand-soft);}
+  .mode-opt .mo-ic{font-size:16px;flex-shrink:0;}
+  .mode-opt .mo-tx{flex:1;}
+  .mode-opt .mo-name{font-size:13px;font-weight:700;color:var(--ink);
+    display:flex;align-items:center;gap:6px;}
+  .mode-opt .mo-name .rec{font-size:9px;font-weight:700;color:var(--brand);
+    background:#fff;border:1px solid #cfcef6;border-radius:5px;padding:1px 5px;}
+  .mode-opt .mo-desc{display:none;}
+  .mode-opt .mo-note{display:none;}
+  .mode-opt .mo-check{color:var(--brand);font-size:13px;flex-shrink:0;visibility:hidden;}
+  .mode-opt.on .mo-check{visibility:visible;}
+  /* 툴팁: 팝업 오른쪽으로 표시 */
+  .mode-opt .mo-tooltip{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);
+    width:210px;background:#1f2430;color:#fff;border-radius:11px;padding:12px 14px;
+    font-size:11.5px;line-height:1.6;pointer-events:none;opacity:0;transition:opacity .15s;z-index:600;
+    white-space:normal;}
+  .mode-opt .mo-tooltip .tt-title{font-weight:700;font-size:12px;margin-bottom:6px;color:#a5b4fc;}
+  .mode-opt .mo-tooltip ul{margin:0;padding:0 0 0 14px;}
+  .mode-opt .mo-tooltip ul li{margin-bottom:3px;}
+  .mode-opt:hover .mo-tooltip{opacity:1;}
+  /* 모드 전환 제안 배너 */
+  .mode-suggest{display:none;align-items:flex-start;gap:9px;background:#fffbeb;
+    border:1px solid #fcd34d;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11.5px;
+    color:#92400e;line-height:1.55;}
+  .mode-suggest.show{display:flex;}
+  .mode-suggest .msg-tx{flex:1;}
+  .mode-suggest .msg-btns{display:flex;gap:6px;margin-top:7px;}
+  .mode-suggest .msg-btns button{font-family:inherit;font-size:11px;font-weight:600;
+    padding:5px 10px;border-radius:7px;cursor:pointer;border:1px solid #fcd34d;background:#fff;color:#92400e;}
+  .mode-suggest .msg-btns button.prim{background:var(--brand);color:#fff;border-color:var(--brand);}</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="note">
+  <h1>피터(개인 AI) — 와이어프레임 v24 (분할 모드 너비 드래그 조절)</h1>
+  <p><span class="tag">N33</span><span class="tag">N34</span><span class="tag">N12-11</span>
+  진입 흐름: 첫 사용 → 확장 모드. 이후 마지막 닫은 모드로 자동 진입. 플로팅은 우측에서 열림.</p>
+</div>
+
+<div class="infobox">
+  <b>방안 A — 마지막 사용 상태 기억 + 플로팅 우측 배치</b><br>
+  · 첫 사용: 확장 모드로 진입 (피터를 제대로 경험)<br>
+  · 이후: 마지막으로 닫은 모드(확장 / 플로팅)로 자동 진입<br>
+  · 플로팅은 <b>우측</b>에서 열림 — 좌측 폴더 네비게이션을 가리지 않고, 업무별 도나와 같은 쪽이라 "도나는 오른쪽" 일관성 확보<br>
+  · 모드 전환은 각 모드 상단 버튼으로 언제든 가능
+</div>
+<div class="notice">
+  ⚠️ <b>기획 보완 필요</b> — 폴더 생성 시 맥락 공유 안내 문구/모달 추가 필요 → 기획안 업데이트 및 ENH 항목 추가
+</div>
+
+<div class="modetabs">
+  <span class="hint">시뮬레이션:</span>
+  <button id="btnExp" class="on" onclick="enterDona('exp')">① 확장 모드 (피터 전체 화면)</button>
+  <button id="btnSplit" onclick="enterDona('split')">② 분할 모드 (좌 피터 | 우 업무 보드)</button>
+  <button id="btnClose" onclick="closeDona()">③ 닫기 (마지막 모드 기억)</button>
+</div>
+
+<!-- ===== APP ===== -->
+<div class="app" id="mainApp" style="display:none;">
+
+  <!-- ── FLOATING MODE ── -->
+  <div class="floating" id="floatPanel">
+    <div class="float-top">
+      <div class="float-titlerow">
+        <div class="ic">P</div>
+        <div class="tt"><b>피터</b><small>내 업무 동료</small></div>
+        <div class="iconbtn" data-tip="파일·자료 보기 (현재 대화)" onclick="toggleFDrawer()">📁</div>
+        <div class="iconbtn" data-tip="확장 모드로 전환" onclick="switchToExp()">⤢</div>
+        <div class="iconbtn" data-tip="피터 전체 설정" onclick="openSettings()">⚙</div>
+        <div class="iconbtn" data-tip="접기 (플로팅 모드로 기억됨)" onclick="closeDona()">✕</div>
+      </div>
+      <div class="float-conv-row">
+        <div class="conv-trigger" onclick="togglePop(event,'fpop')">
+          <span id="fCurrentConv">기본 대화</span>
+          <span class="caret">▼</span>
+        </div>
+        <div class="iconbtn accent" data-tip="현재 대화 프롬프트 설정" onclick="openConvPrompt()">✨</div>
+        <!-- float popover -->
+        <div class="popover" id="fpop" style="display:none;">
+          <h5>대화 선택</h5>
+          <input class="psearch" placeholder="대화 검색">
+          <div class="pnewrow"><div class="pnew">+ 새 대화</div><div class="pnew">+ 새 폴더</div></div>
+          <div class="fgroup">
+            <div class="fhead" onclick="toggleGroup('fg1',event)">
+              <span class="arr" id="fg1arr">▾</span><span class="fname">📁 정부지원사업</span><span class="fcnt">2</span>
+              <span class="fmore" onclick="openCtx(event,'folder')">⋯</span>
+            </div>
+            <div id="fg1">
+              <div class="pitem indent"><span class="pname">사업계획서 준비</span><span class="sh-on">맥락 공유 ON</span><span class="pmore" onclick="openCtx(event,'conv-on')">⋯</span></div>
+              <div class="pitem indent"><span class="pname">검수 요청 정리</span><span class="sh-off">맥락 공유 OFF</span><span class="pmore" onclick="openCtx(event,'conv-off')">⋯</span></div>
+            </div>
+          </div>
+          <div class="fgroup">
+            <div class="fhead" onclick="toggleGroup('fg2',event)">
+              <span class="arr" id="fg2arr">▾</span><span class="fname">📁 마케팅</span><span class="fcnt">1</span>
+              <span class="fmore" onclick="openCtx(event,'folder')">⋯</span>
+            </div>
+            <div id="fg2">
+              <div class="pitem indent"><span class="pname">마케팅 실행 정리</span><span class="sh-on">맥락 공유 ON</span><span class="pmore" onclick="openCtx(event,'conv-on')">⋯</span></div>
+            </div>
+          </div>
+          <div class="pitem on"><span class="pname">기본 대화</span><span class="pmore" onclick="openCtx(event,'conv-lone')">⋯</span></div>
+          <div class="pfoot" onclick="switchToExp()">확장 모드에서 보기 →</div>
+        </div>
+      </div>
+    </div>
+    <div class="float-body" id="floatBody"
+      ondragover="showDrop(event,'fDrop')" ondragleave="hideDrop('fDrop')" ondrop="hideDrop('fDrop')">
+      <div class="drop-hint" id="fDrop">📎 여기에 파일을 놓으면 대화에 첨부됩니다</div>
+      <div class="day">오늘</div>
+      <div class="msg me"><div class="bubble">계약서 검토해줘<div class="file-chip-msg">📄 계약서_초안.pdf</div></div></div>
+      <div class="msg bot"><div>
+        <div class="bot-name">피터 <span class="ok">● 응답 완료</span></div>
+        <div class="bubble">계약서 초안을 검토했습니다. 주요 조항 3가지를 확인해드릴게요…<div class="src">첨부 파일: 계약서_초안.pdf 참고</div></div>
+      </div></div>
+      <div class="msg me"><div class="bubble">이번 주 마감 업무 정리해줘</div></div>
+      <div class="msg bot"><div>
+        <div class="bot-name">피터 <span class="ok">● 응답 완료</span></div>
+        <div class="bubble">이번 주 마감 업무는 2건입니다.<br>· 사업계획서 작성 (D-2)<br>· 출시 문서 정리 (D-4)<div class="src">참고한 업무: 사업계획서 작성, 출시 문서 정리</div></div>
+      </div></div>
+    </div>
+    <div class="suggest">
+      <button>오늘 할 일 알려줘</button><button>나를 멘션한 업무 보기</button><button>이 내용을 업무로 만들어줘</button>
+    </div>
+    <div class="float-input" style="position:relative;">
+      <div class="mode-suggest" id="modeSuggest-f">
+        <span class="ms-ic">💡</span>
+        <div class="msg-tx">이 요청은 자료 확인과 문서 작성이 필요해서 '꼼꼼하게'가 더 적합해요. 빠르게 핵심 초안만 받을까요, 꼼꼼하게 정리할까요?
+          <div class="msg-btns">
+            <button onclick="hideModeSuggest('f')">빠르게 초안만</button>
+            <button class="prim" onclick="setWorkMode('f','together');hideModeSuggest('f')">꼼꼼하게 정리</button>
+          </div>
+        </div>
+      </div>
+      <div class="drag-drop-hint">파일을 대화창에 드래그하거나 📎로 첨부</div>
+      <!-- 모드 선택 팝업 -->
+      
+      <div class="inputbox">
+        <div class="ib-text" contenteditable="true" data-ph="피터와 함께 업무를 진행해보세요..."></div>
+        <div class="ib-bar">
+          <div class="left">
+            <span class="act" data-tip="파일 첨부">📎</span>
+          </div>
+          <div class="right">
+            <span class="mode-btn active-together" id="modeBtn-f" onclick="toggleModePop(event,'f')"><span class="mb-ic">🤝</span><span id="modeBtnLabel-f">꼼꼼하게</span><span class="mb-caret">▼</span>
+<div class="mode-pop" id="modePop-f">
+        <div class="mode-opt" onclick="setWorkMode('f','quick')">
+          <span class="mo-ic">⚡</span>
+          <div class="mo-tx"><div class="mo-name">빠르게</div></div>
+          <span class="mo-check">✓</span>
+          <div class="mo-tooltip">
+              <div class="tt-title">⚡ 빠르게</div>
+              <ul>
+                <li>문장 다듬기, 요약</li>
+                <li>"이 내용 세 줄로 정리해줘"</li>
+                <li>오늘 일정 확인</li>
+                <li>간단한 아이디어 메모</li>
+              </ul>
+            </div>
+        </div>
+        <div class="mode-opt on" onclick="setWorkMode('f','together')">
+          <span class="mo-ic">🤝</span>
+          <div class="mo-tx"><div class="mo-name">꼼꼼하게 <span class="rec">추천</span></div></div>
+          <span class="mo-check">✓</span>
+          <div class="mo-tooltip">
+              <div class="tt-title">🤝 꼼꼼하게</div>
+              <ul>
+                <li>자료 분석, 비교 정리</li>
+                <li>"기획안 검토해줘"</li>
+                <li>문서 초안 작성</li>
+                <li>업무 현황 종합 정리</li>
+              </ul>
+            </div>
+        </div>
+        <div class="mode-opt" onclick="setWorkMode('f','full')">
+          <span class="mo-ic">🚀</span>
+          <div class="mo-tx"><div class="mo-name">깊게</div></div>
+          <span class="mo-check">✓</span>
+          <div class="mo-tooltip">
+              <div class="tt-title">🚀 깊게</div>
+              <ul>
+                <li>복잡한 기획·심층 분석</li>
+                <li>"사업계획서 초안 만들어줘"</li>
+                <li>코드·문서·화면 제작</li>
+                <li>여러 단계 작업 자동 수행</li>
+              </ul>
+            </div>
+        </div>
+      </div></span>
+            <span class="act" data-tip="음성 입력">🎙</span>
+            <span class="send">➤</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- file drawer inside float -->
+    <div class="fdrawer" id="fdrawer">
+      <div class="fdrawer-top"><b>파일·자료</b><div class="iconbtn" onclick="toggleFDrawer()">✕</div></div>
+      <div class="drawer-upload"><span>📤 파일 직접 업로드</span><small>또는 드래그</small></div>
+      <div class="dtab"><span class="on">파일·자료</span><span>업무로 보냄</span></div>
+      <div class="dfilter"><span class="on">전체</span><span>중요</span><span>업로드</span><span>AI 생성</span><span>링크</span></div>
+      <div class="dbody">
+        <div class="filecard">
+          <div class="fn">📄 계약서_초안.pdf <span class="star">★</span></div>
+          <div class="meta"><span class="lab">업로드</span><span class="time">오늘 10:15</span></div>
+          <div class="acts"><button class="p">미리보기</button><button>업무로 보내기</button><button>⋯</button></div>
+        </div>
+        <div class="filecard">
+          <div class="fn">📄 사업계획서_초안.pdf <span class="star">★</span></div>
+          <div class="meta"><span class="lab">AI 생성</span><span class="time">오늘 14:32</span></div>
+          <div class="acts"><button class="p">미리보기</button><button>업무로 보내기</button><button>⋯</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- topbar + list (always rendered) -->
+  <div class="topbar" id="mainTopbar">
+    <!-- 로고 -->
+    <div class="tb-logo-wrap">
+      <div class="logo">D</div>
+      <div class="brandname">Dona Manager</div>
+    </div>
+    <!-- 확장 모드에서만 보이는 피터 명칭 -->
+    <div class="peter-label">
+      <span class="pl-sep">|</span>
+      <span class="pl-name">피터</span>
+      <span class="pl-sub">— 내 업무 동료</span>
+    </div>
+    <!-- 상단 내비 -->
+    <div class="topnav">
+      <span>프로젝트 현황</span>
+      <span>작업 현황</span>
+      <span class="active">리스트</span>
+      <span>더보기 ...</span>
+    </div>
+    <!-- 우측 영역 -->
+    <div class="tb-right">
+      <div class="tb-online">
+        <div class="dot"></div>
+        <span class="cnt">접속 5</span>
+        <span class="names">월 <b>진</b> 필 하 조</span>
+      </div>
+      <div class="tb-date"><span>월</span> 일 하 조</div>
+      <div class="tb-icons">
+        <div class="tb-ic">✏️</div>
+        <div class="tb-ic">📁</div>
+        <div class="tb-ic">🗃</div>
+        <div class="tb-ic notif">🔔</div>
+        <div class="tb-ic">⚙️</div>
+        <div class="tb-ic">🔄</div>
+        <div class="tb-ic">🛡</div>
+        <div class="tb-ic">☾</div>
+        <div class="tb-ic">⏻</div>
+      </div>
+      <div class="tb-new"><span class="plus">+</span> 업무 생성</div>
+    </div>
+    <!-- 피터 모드 우측 (기본 hidden, peter-mode 클래스 붙으면 표시) -->
+    <div class="peter-topbar-right" id="peterTopbarRight">
+      <button onclick="switchToSplit()">⊟ 분할 모드</button>
+      <button class="prim" onclick="goBoard()">← 업무 관리로 바로가기</button>
+      <button onclick="openSettings()">설정 ⚙</button>
+      <div class="close-btn" onclick="closeDona()">✕</div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="sidebar">
+      <div class="sidebar-top">
+        <!-- 확장 모드 전용 헤더 (기본 숨김) -->
+        <div class="exp-sidebar-top">
+          <div class="exp-back-btn" onclick="switchToSplit()">⊟ 분할 모드로 보기</div>
+        </div>
+        <div class="dona-entry active" onclick="toggleDona()" data-tip="클릭하면 피터 열기">
+          <div class="ic">P</div>
+          <div class="tx">
+            <div class="de-top">
+              <b>피터</b>
+              <span class="de-role">개인 업무 동료</span>
+            </div>
+            <div class="de-conv">📌 기본 대화 · 이번 주 마감 업무 2건 정리 완료</div>
+            <div class="de-expand" onclick="event.stopPropagation();switchToExp();">확장 뷰로 보기 ↗</div>
+          </div>
+          <div class="badge">2</div>
+        </div>
+        <div class="mode-memory" id="modeMemory">
+          <span class="dot"></span><span id="modeText">마지막 모드: 확장</span>
+        </div>
+        <div class="divider"></div>
+        <div class="folder-head">새폴더 <div class="plus">+</div></div>
+        <div class="frow active"><span class="dot b"></span>전체 업무<span class="cnt">150</span></div>
+        <div class="frow"><span class="dot"></span>폴더 미지정<span class="cnt">38</span></div>
+        <div class="frow"><span class="dot r"></span>조이 업무<span class="badge2">비공개</span><span class="cnt">3</span></div>
+        <div class="frow"><span class="dot g"></span>필립 업무<span class="badge2">팀</span><span class="cnt">109</span></div>
+      </div>
+      <div class="sidebar-bottom">
+        <div class="gov-btn" data-tip="지원사업 후보 자동 수집·업무 전환">
+          <div class="gic">🏛</div>
+          <div class="gtx"><b>정부지원사업</b><small>신규 16건 · 매칭 77%</small></div>
+          <div class="gbadge">NEW</div>
+        </div>
+      </div>
+    </div>
+    <div class="main" id="mainPanel">
+      <div class="perm">이 폴더의 일부 업무만 볼 수 있습니다</div>
+      <div class="listph">
+        <div class="lh"><div style="width:26px">순서</div><div style="width:70px">업무 번호</div><div style="flex:1">업무명</div><div style="width:70px">상태</div><div style="width:50px">담당</div></div>
+        <div class="lr"><div class="w1">⋮</div><div class="w2">138</div><div class="w3">생성2</div><div style="width:70px">미시작</div><div style="width:50px">윌리</div></div>
+        <div class="lr"><div class="w1">⋮</div><div class="w2">147</div><div class="w3">조이 테스트 진행</div><div style="width:70px">진행중</div><div style="width:50px">조이</div></div>
+        <div class="lr"><div class="w1">⋮</div><div class="w2">161</div><div class="w3">포비업무 초대 테스트</div><div style="width:70px">진행중</div><div style="width:50px">포비</div></div>
+        <div class="lr"><div class="w1">⋮</div><div class="w2">159</div><div class="w3">조이테스트 Test</div><div style="width:70px">미시작</div><div style="width:50px">조이</div></div>
+      </div>
+    </div>
+    <!-- ── SPLIT MODE (분할 뷰: 좌 피터 | 우 업무 보드) ── -->
+  <div class="split-wrap" id="splitWrap">
+    <!-- 피터 패널 -->
+    <div class="split-left">
+      <div class="sl-top">
+        <div class="ic">P</div>
+        <div class="tt"><b>피터</b><small>내 업무 동료</small></div>
+        <div class="sl-btn" data-tip="파일·자료" onclick="openSplitFilePanel()">📁</div>
+        <div class="sl-btn" data-tip="확장 모드로 전환" onclick="switchToExp()">⤢</div>
+        <div class="sl-btn" data-tip="피터 전체 설정" onclick="openSettings()">⚙</div>
+        <div class="sl-btn" data-tip="닫기" onclick="closeDona()">✕</div>
+      </div>
+      <div class="sl-convrow">
+        <div class="conv-trigger" onclick="togglePop(event,'spop')" style="flex:1;">
+          <span>기본 대화</span><span class="caret">▼</span>
+        </div>
+        <div class="iconbtn accent" data-tip="현재 대화 프롬프트 설정" onclick="openConvPrompt()">✨</div>
+        <div class="popover" id="spop" style="display:none;">
+          <h5>대화 선택</h5>
+          <input class="psearch" placeholder="대화 검색">
+          <div class="pnewrow"><div class="pnew">+ 새 대화</div><div class="pnew">+ 새 폴더</div></div>
+          <div class="fgroup">
+            <div class="fhead" onclick="toggleGroup('sg1',event)">
+              <span class="arr" id="sg1arr">▾</span><span class="fname">📁 정부지원사업</span><span class="fcnt">2</span>
+              <span class="fmore" onclick="openCtx(event,'folder')">⋯</span>
+            </div>
+            <div id="sg1">
+              <div class="pitem indent"><span class="pname">사업계획서 준비</span><span class="sh-on">맥락 공유 ON</span><span class="pmore" onclick="openCtx(event,'conv-on')">⋯</span></div>
+              <div class="pitem indent"><span class="pname">검수 요청 정리</span><span class="sh-off">맥락 공유 OFF</span><span class="pmore" onclick="openCtx(event,'conv-off')">⋯</span></div>
+            </div>
+          </div>
+          <div class="pitem on"><span class="pname">기본 대화</span><span class="pmore" onclick="openCtx(event,'conv-lone')">⋯</span></div>
+          <div class="pfoot" onclick="switchToExp()">확장 모드에서 보기 →</div>
+        </div>
+      </div>
+      <div class="sl-body">
+        <div class="day">오늘</div>
+        <div class="msg me"><div class="bubble">이번 주 마감 업무 정리해줘</div></div>
+        <div class="msg bot"><div>
+          <div class="bot-name">피터 <span class="ok">● 응답 완료</span></div>
+          <div class="bubble">이번 주 마감 업무는 2건입니다.<br>· 사업계획서 작성 (D-2)<br>· 출시 문서 정리 (D-4)
+            <div class="src">참고한 업무: 사업계획서 작성, 출시 문서 정리</div></div>
+        </div></div>
+        <div class="msg me"><div class="bubble">우측 보드에서 Planning 업무 상태 알려줘</div></div>
+        <div class="msg bot"><div>
+          <div class="bot-name">피터 <span class="ok">● 응답 완료</span></div>
+          <div class="bubble">Planning 업무는 현재 진행중(50%)이며 마감을 57일 초과한 상태입니다. 우측 보드에서 카드를 클릭하면 상세를 볼 수 있어요.</div>
+        </div></div>
+      </div>
+      <div class="sl-suggest">
+        <button>오늘 할 일 알려줘</button>
+        <button>지연된 업무 정리</button>
+        <button>이 내용을 업무로 만들어줘</button>
+      </div>
+      <div class="sl-input" style="position:relative;">
+        
+        <div class="inputbox">
+          <div class="ib-text" contenteditable="true" data-ph="피터와 함께 업무를 진행해보세요..."></div>
+          <div class="ib-bar">
+            <div class="left">
+              <span class="act" data-tip="파일 첨부">📎</span>
+            </div>
+            <div class="right">
+              <span class="mode-btn active-together" id="modeBtn-s" onclick="toggleModePop(event,'s')"><span class="mb-ic">🤝</span><span id="modeBtnLabel-s">꼼꼼하게</span><span class="mb-caret">▼</span>
+<div class="mode-pop" id="modePop-s">
+        <div class="mode-opt" onclick="setWorkMode('s','quick')">
+          <span class="mo-ic">⚡</span>
+          <div class="mo-tx"><div class="mo-name">빠르게</div></div>
+          <span class="mo-check">✓</span>
+          <div class="mo-tooltip">
+              <div class="tt-title">⚡ 빠르게</div>
+              <ul>
+                <li>문장 다듬기, 요약</li>
+                <li>"이 내용 세 줄로 정리해줘"</li>
+                <li>오늘 일정 확인</li>
+                <li>간단한 아이디어 메모</li>
+              </ul>
+            </div>
+        </div>
+        <div class="mode-opt on" onclick="setWorkMode('s','together')">
+          <span class="mo-ic">🤝</span>
+          <div class="mo-tx"><div class="mo-name">꼼꼼하게 <span class="rec">추천</span></div></div>
+          <span class="mo-check">✓</span>
+          <div class="mo-tooltip">
+              <div class="tt-title">🤝 꼼꼼하게</div>
+              <ul>
+                <li>자료 분석, 비교 정리</li>
+                <li>"기획안 검토해줘"</li>
+                <li>문서 초안 작성</li>
+                <li>업무 현황 종합 정리</li>
+              </ul>
+            </div>
+        </div>
+        <div class="mode-opt" onclick="setWorkMode('s','full')">
+          <span class="mo-ic">🚀</span>
+          <div class="mo-tx"><div class="mo-name">깊게</div></div>
+          <span class="mo-check">✓</span>
+          <div class="mo-tooltip">
+              <div class="tt-title">🚀 깊게</div>
+              <ul>
+                <li>복잡한 기획·심층 분석</li>
+                <li>"사업계획서 초안 만들어줘"</li>
+                <li>코드·문서·화면 제작</li>
+                <li>여러 단계 작업 자동 수행</li>
+              </ul>
+            </div>
+        </div>
+      </div></span>
+              <span class="act" data-tip="음성 입력">🎙</span>
+              <span class="send">➤</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 분할 모드 파일·자료 패널 (split-left 전체 덮음, dim 없음) -->
+      <div class="split-file-panel" id="splitFilePanel">
+        <div class="sfp-head">
+          <b>📁 파일·자료</b>
+          <div class="iconbtn" onclick="closeSplitFilePanel()" style="margin-left:auto;">✕</div>
+        </div>
+        <div class="dtab" style="padding:10px 14px 0;">
+          <span class="on">파일·자료</span><span>업무로 보냄</span>
+        </div>
+        <div class="dfilter" style="padding:8px 14px;">
+          <span class="on">전체</span><span>중요</span><span>업로드</span><span>AI 생성</span><span>링크</span>
+        </div>
+        <div class="drawer-upload" style="margin:0 14px 12px;">
+          <span>📤 파일 직접 업로드</span><small>또는 드래그</small>
+        </div>
+        <div style="padding:0 14px;overflow:auto;flex:1;">
+          <div class="filechip" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;">
+            📄 <span style="flex:1;font-size:12.5px;">계약서_초안.pdf</span>
+            <span class="lab">업로드</span>
+          </div>
+          <div class="filechip" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;">
+            📄 <span style="flex:1;font-size:12.5px;">사업계획서_초안.pdf</span>
+            <span class="lab">AI 생성</span>
+          </div>
+          <div class="filechip" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;">
+            🔗 <span style="flex:1;font-size:12.5px;">시장 분석 리포트.link</span>
+            <span class="lab">링크</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 너비 조절 핸들 (드래그로 피터↔협업보드 비율 조정) -->
+    <div class="split-resizer" id="splitResizer" data-tip="드래그해서 너비 조절"></div>
+    <!-- 분할 모드 사이드바 (폴더 패널) -->
+    <div class="sw-sidebar">
+      <div class="folder-head">새폴더 <div class="plus">+</div></div>
+      <div class="frow active"><span class="dot b"></span>전체 업무<span class="cnt">150</span></div>
+      <div class="frow"><span class="dot"></span>폴더 미지정<span class="cnt">38</span></div>
+      <div class="frow"><span class="dot r"></span>조이 업무<span class="badge2">비공개</span><span class="cnt">3</span></div>
+      <div class="frow"><span class="dot g"></span>필립 업무<span class="badge2">팀</span><span class="cnt">109</span></div>
+      <div class="sw-sidebar-bottom">
+        <div class="gov-btn">
+          <div class="gic">🏛</div>
+          <div class="gtx"><b>정부지원사업</b><small>신규 16건 · 77%</small></div>
+          <div class="gbadge">NEW</div>
+        </div>
+      </div>
+    </div>
+    <!-- 우: 업무 보드 (리스트 뷰 기반) -->
+    <div class="split-right">
+      <div class="sr-top">
+        <div class="logo">D</div>
+        <div class="sr-title">업무 보드</div>
+        <div class="sr-tabs">
+          <span class="on">리스트</span><span>칸반보드</span><span>간트차트</span><span>캘린더</span>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;font-size:12px;color:var(--muted);">
+          <span>선택</span><span>전체 펼치기</span><span>전체 접기</span>
+        </div>
+      </div>
+      <!-- 통계 바 -->
+      <div class="sr-stat">
+        <span class="pct">0%</span>
+        <span style="flex:1;height:5px;background:#eef0f5;border-radius:3px;overflow:hidden;max-width:160px;">
+          <span style="display:block;height:100%;width:0%;background:var(--brand);border-radius:3px;"></span>
+        </span>
+        <span>전체 <b>3</b></span>
+        <span class="tag t-todo">미시작 2</span>
+        <span class="tag t-doing">진행 1</span>
+        <span class="tag t-done">완료 0</span>
+        <span>진행 중지 0</span>
+        <span>조건</span>
+        <span style="color:var(--red);">마감 초과 2</span>
+      </div>
+      <!-- 리스트 -->
+      <div class="sr-body" style="overflow:auto;padding:0;">
+        <table class="list-table">
+          <thead>
+            <tr>
+              <th class="lrow-drag"></th>
+              <th class="lrow-num">번호</th>
+              <th>업무명</th>
+              <th class="lrow-status">상태</th>
+              <th class="lrow-owner">담당</th>
+              <th class="lrow-d">D-day</th>
+              <th class="lrow-more"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr onclick="openTask(event)">
+              <td class="lrow-drag">⋮</td>
+              <td class="lrow-num">147</td>
+              <td class="lrow-name">조이 테스트 진행</td>
+              <td><span class="status-chip sc-doing">진행중</span></td>
+              <td class="lrow-owner">조이</td>
+              <td class="lrow-d" style="color:var(--red);">D+0</td>
+              <td class="lrow-more">⋯</td>
+            </tr>
+            <tr onclick="openTask(event)">
+              <td class="lrow-drag">⋮</td>
+              <td class="lrow-num">161</td>
+              <td class="lrow-name">포비업무 초대 테스트</td>
+              <td><span class="status-chip sc-todo">미시작</span></td>
+              <td class="lrow-owner">포비</td>
+              <td class="lrow-d">—</td>
+              <td class="lrow-more">⋯</td>
+            </tr>
+            <tr onclick="openTask(event)">
+              <td class="lrow-drag">⋮</td>
+              <td class="lrow-num">162</td>
+              <td class="lrow-name">조이 테스트 진행 2</td>
+              <td><span class="status-chip sc-todo">미시작</span></td>
+              <td class="lrow-owner">조이</td>
+              <td class="lrow-d">—</td>
+              <td class="lrow-more">⋯</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 업무 패널 — split-right 안에서 우측 2/3 오버레이, 피터 영역 침범 X, dim 없음 -->
+      <div class="task-overlay" id="taskOverlay">
+      <div class="task-modal">
+        <!-- 좌(가운데): 업무 상세 -->
+        <div class="tm-detail">
+          <div class="tm-dhead">
+            <span class="tm-no">147</span>
+            <b>조이 테스트 진행</b>
+            <span class="tm-save">저장됨</span>
+            <div class="tm-close" onclick="closeTask()">✕</div>
+          </div>
+          <div class="tm-dbody">
+            <div class="tm-field">
+              <label>업무명</label>
+              <input type="text" value="조이 테스트 진행">
+            </div>
+            <div class="tm-grid" style="margin-bottom:18px;">
+              <div class="tm-col"><label>담당자</label><select class="tm-sel"><option>조이</option></select></div>
+              <div class="tm-col"><label>담당파트</label><select class="tm-sel"><option>미분류</option></select></div>
+              <div class="tm-col"><label>폴더</label><select class="tm-sel"><option>조이 업무</option></select></div>
+              <div class="tm-col"><label>우선순위</label><select class="tm-sel"><option>보통</option></select></div>
+            </div>
+            <div class="tm-field">
+              <label>설명</label>
+              <textarea placeholder="업무 설명을 입력하세요"></textarea>
+            </div>
+            <div class="tm-members" style="margin-bottom:18px;">
+              <div class="tmm-head">배정 멤버 <span>3명</span></div>
+              <div>
+                <span class="tm-chip">@조이</span>
+                <span class="tm-chip">@포비 <span class="x">×</span></span>
+                <span class="tm-chip">@조이테스트 <span class="x">×</span></span>
+              </div>
+            </div>
+            <div class="tm-field">
+              <label>상태</label>
+              <div class="tm-status-seg">
+                <div class="so">미시작</div>
+                <div class="so on">진행중</div>
+                <div class="so">검토</div>
+                <div class="so">완료</div>
+              </div>
+            </div>
+            <div class="tm-grid">
+              <div class="tm-col"><label>시작일</label><input type="text" value="2026. 06. 09."></div>
+              <div class="tm-col"><label>종료일</label><input type="text" value="2026. 06. 09."></div>
+            </div>
+          </div>
+        </div>
+        <!-- 우: 업무별 도나 어시스트 -->
+        <div class="tm-dona">
+          <div class="tm-dona-head">
+            <b>업무별 도나 어시스트</b>
+            <span class="role">역할 미설정</span>
+          </div>
+          <div class="tm-dona-tabs">
+            <span class="on">도나</span>
+            <span>대화 10</span>
+          </div>
+          <div class="tm-dona-body">
+            <div class="tm-note">
+              💡 이 업무 상세는 분할 모드 위에 <b>오버레이(플로팅)</b>로 열립니다. 좌측 피터는 그대로 유지돼요.<br>
+              여기 업무별 도나는 <b>이 업무 전용 보조</b>이며, 피터(좌측, 내 전체 일)와 역할이 구분됩니다.
+            </div>
+            <div class="msg me"><div class="bubble">오늘 며칠인지 알려줘</div></div>
+            <div class="msg bot"><div>
+              <div class="bot-name">도나 어시스트 <span class="ok">● 응답 완료</span></div>
+              <div class="bubble">오늘은 2026년 6월 8일 월요일입니다.</div>
+            </div></div>
+            <div class="msg me"><div class="bubble">빈 엑셀 시트 생성해줘</div></div>
+            <div class="msg bot"><div>
+              <div class="bot-name">도나 어시스트 <span class="ok">● 응답 완료</span></div>
+              <div class="bubble">빈 엑셀 파일이 이미 생성되어 있고 정상 .xlsx 형식입니다.
+                <div class="file-chip-msg">📄 blank.xlsx</div>
+              </div>
+            </div></div>
+          </div>
+          <div class="tm-dona-input">
+            <div class="inputbox">
+              <div class="ib-text" contenteditable="true" data-ph="메시지를 입력하세요..."></div>
+              <div class="ib-bar">
+                <div class="left"><span class="act" data-tip="파일 첨부">📎</span></div>
+                <div class="right"><span class="act" data-tip="음성 입력">🎙</span><span class="send">➤</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /task-overlay -->
+    </div><!-- /split-right -->
+  </div><!-- /split-wrap -->
+  </div>
+
+  <!-- ── EXPANDED MODE (topbar 아래부터) ── -->
+  <div class="exp-wrap" id="expWrap" style="display:none;position:absolute;top:52px;left:0;right:0;bottom:0;background:#faf9ff;z-index:150;">
+    <div class="exp-body">
+      <div class="ecol eleft">
+        <div class="eleft-top">
+          <div class="col-title">개인 대화 <span class="mk">+ 새 폴더</span></div>
+          <div class="enew">+ 새 대화</div>
+          <div class="efg">
+            <div class="efhead">▾ 📁 정부지원사업 <span class="efmore" onclick="openCtx(event,'folder')">⋯</span></div>
+            <div class="econv"><span class="pname">사업계획서 준비</span><span class="sh-on">맥락 공유 ON</span><span class="emore" onclick="openCtx(event,'conv-on')">⋯</span></div>
+            <div class="econv"><span class="pname">검수 요청 정리</span><span class="sh-off">맥락 공유 OFF</span><span class="emore" onclick="openCtx(event,'conv-off')">⋯</span></div>
+          </div>
+          <div class="efg">
+            <div class="efhead">▾ 📁 마케팅 <span class="efmore" onclick="openCtx(event,'folder')">⋯</span></div>
+            <div class="econv"><span class="pname">마케팅 실행 정리</span><span class="sh-on">맥락 공유 ON</span><span class="emore" onclick="openCtx(event,'conv-on')">⋯</span></div>
+          </div>
+          <div class="econv on"><span class="pname">기본 대화</span><span class="emore" onclick="openCtx(event,'conv-lone')">⋯</span></div>
+        </div>
+      </div>
+      <div class="ecol emid">
+        <p style="font-size:12px;color:var(--muted);font-weight:700;margin:0 0 10px;">기본 대화</p>
+        <div class="emid-msgs">
+          <div class="msg me"><div class="bubble">계약서 검토해줘<div class="file-chip-msg">📄 계약서_초안.pdf</div></div></div>
+          <div class="msg bot"><div>
+            <div class="bot-name">피터 <span class="ok">● 응답 완료</span></div>
+            <div class="bubble">계약서 초안을 검토했습니다…</div>
+          </div></div>
+          <div class="msg me"><div class="bubble">이번 주 마감 업무 정리해줘</div></div>
+          <div class="msg bot"><div>
+            <div class="bot-name">피터 <span class="ok">● 응답 완료</span></div>
+            <div class="bubble">이번 주 마감 업무는 2건입니다.<br>· 사업계획서 작성 (D-2)<br>· 출시 문서 정리 (D-4)</div>
+          </div></div>
+        </div>
+        <div class="emid-input" style="position:relative;">
+          <div class="drag-drop-hint">파일을 대화창에 드래그하거나 📎로 첨부</div>
+          
+          <div class="inputbox"><div class="ib-text" contenteditable="true" data-ph="피터와 함께 업무를 진행해보세요..."></div><div class="ib-bar"><div class="left"><span class="act">📎</span></div><div class="right"><span class="mode-btn active-together" id="modeBtn-e" onclick="toggleModePop(event,'e')"><span class="mb-ic">🤝</span><span id="modeBtnLabel-e">꼼꼼하게</span><span class="mb-caret">▼</span>
+<div class="mode-pop" id="modePop-e">
+        <div class="mode-opt" onclick="setWorkMode('e','quick')">
+          <span class="mo-ic">⚡</span>
+          <div class="mo-tx"><div class="mo-name">빠르게</div></div>
+          <span class="mo-check">✓</span>
+          <div class="mo-tooltip">
+              <div class="tt-title">⚡ 빠르게</div>
+              <ul>
+                <li>문장 다듬기, 요약</li>
+                <li>"이 내용 세 줄로 정리해줘"</li>
+                <li>오늘 일정 확인</li>
+                <li>간단한 아이디어 메모</li>
+              </ul>
+            </div>
+        </div>
+        <div class="mode-opt on" onclick="setWorkMode('e','together')">
+          <span class="mo-ic">🤝</span>
+          <div class="mo-tx"><div class="mo-name">꼼꼼하게 <span class="rec">추천</span></div></div>
+          <span class="mo-check">✓</span>
+          <div class="mo-tooltip">
+              <div class="tt-title">🤝 꼼꼼하게</div>
+              <ul>
+                <li>자료 분석, 비교 정리</li>
+                <li>"기획안 검토해줘"</li>
+                <li>문서 초안 작성</li>
+                <li>업무 현황 종합 정리</li>
+              </ul>
+            </div>
+        </div>
+        <div class="mode-opt" onclick="setWorkMode('e','full')">
+          <span class="mo-ic">🚀</span>
+          <div class="mo-tx"><div class="mo-name">깊게</div></div>
+          <span class="mo-check">✓</span>
+          <div class="mo-tooltip">
+              <div class="tt-title">🚀 깊게</div>
+              <ul>
+                <li>복잡한 기획·심층 분석</li>
+                <li>"사업계획서 초안 만들어줘"</li>
+                <li>코드·문서·화면 제작</li>
+                <li>여러 단계 작업 자동 수행</li>
+              </ul>
+            </div>
+        </div>
+      </div></span><span class="act">🎙</span><span class="send">➤</span></div></div></div>
+        </div>
+      </div>
+      <div class="ecol eright">
+        <!-- 에이전트(프롬프트) 설정 카드 -->
+        <div class="agent-card">
+          <div class="ac-head">
+            <span class="ac-ic">🤖</span>
+            <b>이 대화의 에이전트 설정</b>
+            <span class="ac-edit" onclick="openConvPrompt()">✨ 편집</span>
+          </div>
+          <div class="agent-now">
+            <span class="tagx">기본 설정 사용 중</span>이 대화는 별도 프롬프트가 없어 전체 설정을 따릅니다.
+          </div>
+        </div>
+        <div class="rcard">
+          <div class="rtab"><span class="on">파일·자료</span><span>업무로 보냄</span></div>
+          <div class="drawer-upload" style="margin:0 0 10px;"><span>📤 파일 직접 업로드</span><small>또는 드래그</small></div>
+          <div class="filechip">📄 계약서_초안.pdf <span class="lab">업로드</span></div>
+          <div class="filechip">📄 사업계획서_초안.pdf <span class="lab">AI 생성</span></div>
+        </div>
+        <div class="rcard">
+          <h6>추천 액션</h6>
+          <div class="suggest" style="padding:0;">
+            <button>오늘 할 일 알려줘</button>
+            <button>이번 주 마감 업무 정리</button>
+            <button>새 업무 만들기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /mainApp -->
+
+<div class="ctx" id="ctxConvOn">
+  <div class="ci">이름 수정</div><div class="ci" onclick="openConvPrompt()">대화 프롬프트 설정</div>
+  <div class="ci" onclick="openMovePanel(event)">대화 이동</div>
+  <div class="ci">폴더 내 맥락 공유 끄기</div>
+  <div class="csep"></div><div class="ci danger">삭제</div>
+</div>
+<div class="ctx" id="ctxConvOff">
+  <div class="ci">이름 수정</div><div class="ci" onclick="openConvPrompt()">대화 프롬프트 설정</div>
+  <div class="ci" onclick="openMovePanel(event)">대화 이동</div>
+  <div class="ci">폴더 내 맥락 공유 켜기</div>
+  <div class="csep"></div><div class="ci danger">삭제</div>
+</div>
+<div class="ctx" id="ctxConvLone">
+  <div class="ci">이름 수정</div><div class="ci" onclick="openConvPrompt()">대화 프롬프트 설정</div>
+  <div class="ci" onclick="openMovePanel(event)">대화 이동</div>
+  <div class="csep"></div><div class="ci danger">삭제</div>
+</div>
+<div class="ctx" id="ctxFolder">
+  <div class="ci">폴더 이름 수정</div>
+  <div class="csep"></div><div class="ci danger">폴더 삭제</div>
+</div>
+<div class="move-panel" id="movePanel">
+  <h6>어디로 이동할까요?</h6>
+  <div class="mitem disabled"><div class="mcheck on">✓</div><span>📁 정부지원사업 <span style="font-size:11px;color:var(--muted)">(현재)</span></span></div>
+  <div class="mitem"><div class="mcheck"></div><span>📁 마케팅</span></div>
+  <div class="msep"></div>
+  <div class="mitem"><div class="mcheck"></div><span style="color:var(--muted)">폴더 없이 보관</span></div>
+  <div class="mitem"><div class="mcheck"></div><span style="color:var(--brand);font-weight:600">+ 새 폴더 만들기</span></div>
+  <div class="mfoot">
+    <button class="mcancel" onclick="closeMovePanel()">취소</button>
+    <button class="mok">이동</button>
+  </div>
+</div>
+
+<!-- ===== ⚙ 피터 전체 설정 모달 ===== -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="mh-ic">⚙</div>
+      <b>피터 전체 설정</b>
+      <div class="mh-close" onclick="closeSettings()">✕</div>
+    </div>
+    <div class="modal-tabs">
+      <div class="mt on" onclick="setTab(event,'pane-prompt')">기본 프롬프트</div>
+      <div class="mt" onclick="setTab(event,'pane-security')">개인 보안 정보</div>
+      <div class="mt" onclick="setTab(event,'pane-data')">데이터 관리</div>
+    </div>
+    <div class="modal-body">
+      <!-- 탭1: 기본 프롬프트 -->
+      <div class="mpane on" id="pane-prompt">
+        <div class="cp-info" style="margin-bottom:16px;">
+          <b>프롬프트 우선순위</b><br>
+          ① 대화별 프롬프트(✨) → <b>② 피터 전체 설정(지금 이 화면)</b> → ③ 시스템 기본<br>
+          여기 설정은 대화별 프롬프트가 없는 모든 대화에 기본으로 적용됩니다.
+        </div>
+        <div class="field">
+          <label>피터 호칭 <span style="color:var(--muted);font-weight:400;">(선택)</span></label>
+          <div class="desc">피터를 부르는 이름을 바꿀 수 있습니다.</div>
+          <input type="text" value="피터" placeholder="예: 피터, 비서, 조이의 도우미">
+        </div>
+        <div class="field">
+          <label>기본 역할 / 말투 프롬프트</label>
+          <div class="desc">별도 프롬프트가 없는 모든 대화에 기본으로 적용됩니다.</div>
+          <textarea placeholder="나는 도나매니저의 프로덕트 기획자야.&#10;항상 비개발자도 이해할 수 있게 설명하고,&#10;답변은 핵심부터 간결하게 정리해줘."></textarea>
+        </div>
+        <div class="field">
+          <label>응답 길이 선호 <span style="color:var(--muted);font-weight:400;">(선택)</span></label>
+          <div class="seg">
+            <div class="so">간결</div>
+            <div class="so on">보통</div>
+            <div class="so">상세</div>
+          </div>
+        </div>
+      </div>
+      <!-- 탭2: 개인 보안 정보 -->
+      <div class="mpane" id="pane-security">
+        <div class="sec-warn">
+          ⚠ 비밀번호·카드번호·계좌 비밀번호 등 민감 정보는 입력하지 마세요.<br>
+          입력한 정보는 암호화되어 보관되며, "피터 참고 허용"을 켠 항목만 답변에 활용됩니다.
+        </div>
+        <div class="sec-item">
+          <span class="si-key">회사명</span>
+          <span class="si-val">주식회사 도나</span>
+          <div class="si-toggle"><div class="toggle on" onclick="this.classList.toggle('on')"></div>참고 허용</div>
+          <span class="si-more">⋯</span>
+        </div>
+        <div class="sec-item">
+          <span class="si-key">사업자번호</span>
+          <span class="si-val">123-45-67890</span>
+          <div class="si-toggle"><div class="toggle on" onclick="this.classList.toggle('on')"></div>참고 허용</div>
+          <span class="si-more">⋯</span>
+        </div>
+        <div class="sec-item">
+          <span class="si-key">대표 메모</span>
+          <span class="si-val">정부지원사업 우선 검토 분야: AI·핀테크</span>
+          <div class="si-toggle"><div class="toggle" onclick="this.classList.toggle('on')"></div>참고 허용</div>
+          <span class="si-more">⋯</span>
+        </div>
+        <div class="add-sec">+ 보안 정보 항목 추가</div>
+      </div>
+      <!-- 탭3: 데이터 관리 -->
+      <div class="mpane" id="pane-data">
+        <div class="data-row">
+          <div class="dr-tx"><b>피터 대화 내보내기</b><small>모든 대화를 파일로 저장합니다.</small></div>
+          <button>내보내기</button>
+        </div>
+        <div class="data-row">
+          <div class="dr-tx"><b>대화 데이터 삭제</b><small>모든 피터 대화가 영구 삭제됩니다.</small></div>
+          <button class="danger">전체 삭제</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeSettings()">취소</button>
+      <button class="btn-prim" onclick="closeSettings()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ✨ 대화별 프롬프트 설정 모달 ===== -->
+<div class="modal-overlay" id="convPromptModal">
+  <div class="modal cp-modal">
+    <div class="modal-head">
+      <div class="mh-ic">✨</div>
+      <b>대화 프롬프트 설정</b>
+      <div class="mh-close" onclick="closeConvPrompt()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">
+        "<b style="color:var(--ink);">기본 대화</b>" 대화의 프롬프트
+      </div>
+      <span class="cp-status base" id="cpStatus">● 기본 설정 사용 중</span>
+      <div class="cp-info">
+        <b>프롬프트 우선순위</b><br>
+        ① 대화별 프롬프트(지금 이 화면) → ② 피터 전체 설정(⚙) → ③ 시스템 기본<br>
+        여기에 입력하면 이 대화에서 가장 먼저 적용됩니다. 비워두면 전체 설정을 따릅니다.
+      </div>
+      <div class="field">
+        <label>설정 이름 <span style="color:var(--muted);font-weight:400;">(선택)</span></label>
+        <input type="text" placeholder="예: 사업계획서 도우미" oninput="updateCpStatus(this.value)">
+      </div>
+      <div class="field">
+        <label>프롬프트 내용</label>
+        <textarea placeholder="너는 사업계획서 전문가야.&#10;정부지원사업 양식에 맞춰 명확하게 답해줘." oninput="updateCpStatus(this.value)"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeConvPrompt()">기본으로 되돌리기</button>
+      <button class="btn-prim" onclick="closeConvPrompt()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <b>v13 추가 — 피터 설정 (IMP-015 / IMP-016)</b><br>
+  · 플로팅·확장 상단 <b>⚙ 버튼</b> → 피터 전체 설정 모달 (IMP-016)<br>
+  &nbsp;&nbsp;탭: [기본 프롬프트] [개인 보안 정보] [데이터 관리]<br>
+  &nbsp;&nbsp;— 기본 프롬프트: 호칭·역할/말투·응답 길이 (모든 대화 기본값)<br>
+  &nbsp;&nbsp;— 개인 보안 정보: 키-값 + "참고 허용" 토글 (켠 항목만 피터가 활용, N37 연계)<br>
+  &nbsp;&nbsp;— 데이터 관리: 대화 내보내기 / 전체 삭제<br>
+  · 드롭다운 옆 <b>✨ 버튼</b> 또는 대화 ⋯ > 대화 프롬프트 설정 → 대화별 프롬프트 (IMP-015)<br>
+  &nbsp;&nbsp;— 설정 이름 + 프롬프트 내용 입력<br>
+  &nbsp;&nbsp;— 상태 뱃지: [기본 설정 사용 중] ↔ [맞춤 프롬프트 적용 중] (입력 시 자동 전환)<br>
+  &nbsp;&nbsp;— 우선순위: 대화별(015) > 전체 기본(016)<br>
+  <br>
+  <b>이전 진입 흐름 (방안 A — 마지막 모드 기억)</b><br>
+  · 확장 모드 상단: [플로팅 모드로 보기] / [← 업무 관리로 바로가기] / [설정 ⚙]<br>
+  · 플로팅 모드 상단: [⤢ 확장] / [⚙ 설정] / [✕ 접기]<br>
+  · 플로팅은 우측 배치 — 좌측 폴더 보존 + 업무별 도나와 같은 쪽
+</div>
+</div>
+
+<script>
+  // state
+  let lastMode = 'exp'; // 'exp' | 'float' | 'split'
+  let donaOpen = false;
+
+  function hideAllModes(){
+    const ew=document.getElementById('expWrap');
+    ew.style.display='none'; ew.classList.remove('show');
+    document.getElementById('floatPanel').classList.remove('open');
+    const sw=document.getElementById('splitWrap');
+    sw.classList.remove('show');
+    document.getElementById('fdrawer').classList.remove('open');
+    closeTask();
+    closeSplitFilePanel();
+    document.getElementById('mainTopbar').classList.remove('peter-mode');
+    document.getElementById('mainApp').classList.remove('exp-active');
+  }
+
+  function enterDona(mode){
+    lastMode = mode;
+    donaOpen = true;
+    document.getElementById('mainApp').style.display = 'block';
+    if(mode === 'exp') showExp();
+    else if(mode === 'float') showFloat();
+    else if(mode === 'split') showSplit();
+    updateModeMemory();
+    document.getElementById('btnExp').className = (mode==='exp')?'on':'';
+    // 플로팅 모드 버튼 제거됨
+    if(document.getElementById('btnSplit')) document.getElementById('btnSplit').className = (mode==='split')?'on':'';
+    document.getElementById('btnClose').className = '';
+    window.scrollTo({top:200,behavior:'smooth'});
+  }
+  function closeDona(){
+    donaOpen = false;
+    hideAllModes();
+    updateModeMemory();
+    document.getElementById('btnClose').className = 'on';
+    document.getElementById('btnExp').className = '';
+    // 플로팅 모드 버튼 제거됨
+    if(document.getElementById('btnSplit')) document.getElementById('btnSplit').className = '';
+  }
+  function hideFloat(){
+    document.getElementById('floatPanel').classList.remove('open');
+    document.getElementById('fdrawer').classList.remove('open');
+  }
+  function toggleDona(){
+    if(donaOpen){ closeDona(); }
+    else { enterDona(lastMode); }
+  }
+  function switchToExp(){
+    lastMode='exp'; hideAllModes(); showExp(); donaOpen=true; updateModeMemory(); closePops();
+  }
+  function switchToFloat(){
+    lastMode='float'; hideAllModes(); showFloat(); donaOpen=true; updateModeMemory(); closePops();
+  }
+  function switchToSplit(){
+    lastMode='split'; hideAllModes(); showSplit(); donaOpen=true; updateModeMemory(); closePops();
+  }
+  function goBoard(){
+    closeDona();
+    window.scrollTo({top:200,behavior:'smooth'});
+  }
+  function showExp(){
+    const w=document.getElementById('expWrap');
+    w.style.display='block';
+    w.classList.remove('show');
+    requestAnimationFrame(()=>{ w.classList.add('show'); });
+    document.getElementById('mainTopbar').classList.add('peter-mode');
+    // 사이드바 확장 모드 변형
+    document.getElementById('mainApp').classList.add('exp-active');
+  }
+  function hideExp(){
+    const w=document.getElementById('expWrap');
+    w.style.display='none';
+    w.classList.remove('show');
+    document.getElementById('mainTopbar').classList.remove('peter-mode');
+    document.getElementById('mainApp').classList.remove('exp-active');
+  }
+  function showFloat(){
+    document.getElementById('floatPanel').classList.add('open');
+    document.getElementById('mainTopbar').classList.remove('peter-mode');
+  }
+  function showSplit(){
+    // split-wrap이 position:absolute로 전체 덮음
+    const w=document.getElementById('splitWrap');
+    w.classList.add('show');
+    document.getElementById('mainTopbar').classList.remove('peter-mode');
+  }
+  // 업무 상세 오버레이
+  function openTask(e){
+    if(e) e.stopPropagation();
+    document.getElementById('taskOverlay').classList.add('show');
+  }
+  function closeTask(){
+    const t=document.getElementById('taskOverlay');
+    if(t) t.classList.remove('show');
+  }
+  // 분할 모드 파일·자료 패널
+  function openSplitFilePanel(){
+    const p=document.getElementById('splitFilePanel');
+    if(p) p.classList.add('show');
+  }
+  function closeSplitFilePanel(){
+    const p=document.getElementById('splitFilePanel');
+    if(p) p.classList.remove('show');
+  }
+  // ===== 분할 모드 너비 조절 (드래그 리사이저) =====
+  (function(){
+    const MIN_PX = 320;   // 피터 최소 너비
+    const MAX_RATIO = 0.5; // 최대 50%
+    let dragging = false;
+    let startX = 0;
+    let startW = 0;
+
+    const resizer = document.getElementById('splitResizer');
+    const splitWrap = document.getElementById('splitWrap');
+    const splitLeft = splitWrap ? splitWrap.querySelector('.split-left') : null;
+
+    if(!resizer || !splitLeft) return;
+
+    resizer.addEventListener('mousedown', function(e){
+      dragging = true;
+      startX = e.clientX;
+      startW = splitLeft.getBoundingClientRect().width;
+      resizer.classList.add('dragging');
+      // 드래그 중 텍스트 선택 방지
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', function(e){
+      if(!dragging) return;
+      const totalW = splitWrap.getBoundingClientRect().width;
+      const dx = e.clientX - startX;
+      let newW = startW + dx;
+      // 제약 적용
+      newW = Math.max(MIN_PX, newW);
+      newW = Math.min(totalW * MAX_RATIO, newW);
+      // CSS 변수로 너비 설정 (% 대신 px로)
+      splitWrap.style.setProperty('--split-left-w', newW + 'px');
+      splitLeft.style.width = newW + 'px';
+    });
+
+    document.addEventListener('mouseup', function(){
+      if(!dragging) return;
+      dragging = false;
+      resizer.classList.remove('dragging');
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    });
+
+    // 터치 지원 (모바일/태블릿)
+    resizer.addEventListener('touchstart', function(e){
+      dragging = true;
+      startX = e.touches[0].clientX;
+      startW = splitLeft.getBoundingClientRect().width;
+      resizer.classList.add('dragging');
+      e.preventDefault();
+    }, {passive:false});
+
+    document.addEventListener('touchmove', function(e){
+      if(!dragging) return;
+      const totalW = splitWrap.getBoundingClientRect().width;
+      const dx = e.touches[0].clientX - startX;
+      let newW = startW + dx;
+      newW = Math.max(MIN_PX, newW);
+      newW = Math.min(totalW * MAX_RATIO, newW);
+      splitLeft.style.width = newW + 'px';
+    }, {passive:false});
+
+    document.addEventListener('touchend', function(){
+      dragging = false;
+      resizer.classList.remove('dragging');
+    });
+  })();
+
+  function updateModeMemory(){
+    const el=document.getElementById('modeText');
+    const mem=document.getElementById('modeMemory');
+    const names={exp:'확장 모드',float:'플로팅 모드',split:'분할 모드'};
+    if(!donaOpen){
+      el.textContent='마지막 모드: '+(names[lastMode]||'확장 모드').replace(' 모드','')+' (닫힘)';
+    } else {
+      el.textContent='현재: '+(names[lastMode]||'확장 모드');
+    }
+    mem.style.display='flex';
+  }
+
+  // popover
+  function togglePop(e,id){
+    e.stopPropagation();
+    const p=document.getElementById(id);
+    p.style.display=(p.style.display==='none')?'block':'none';
+  }
+  function closePops(){
+    document.querySelectorAll('.popover').forEach(p=>p.style.display='none');
+  }
+  function toggleFDrawer(){document.getElementById('fdrawer').classList.toggle('open');}
+  function toggleGroup(id,e){
+    if(e)e.stopPropagation();
+    const g=document.getElementById(id),arr=document.getElementById(id+'arr');
+    if(!g)return;
+    const h=g.style.display==='none';
+    g.style.display=h?'block':'none';
+    arr.textContent=h?'▾':'▸';
+  }
+  function openCtx(e,type){
+    e.stopPropagation(); hideCtx(); closeMovePanel();
+    const map={'conv-on':'ctxConvOn','conv-off':'ctxConvOff','conv-lone':'ctxConvLone','folder':'ctxFolder'};
+    const m=document.getElementById(map[type]);
+    if(!m)return;
+    m.style.left=(e.clientX-10)+'px'; m.style.top=(e.clientY+6)+'px';
+    m.classList.add('show');
+  }
+  function hideCtx(){document.querySelectorAll('.ctx').forEach(c=>c.classList.remove('show'));}
+  function openMovePanel(e){
+    e.stopPropagation(); hideCtx();
+    const mp=document.getElementById('movePanel');
+    mp.style.left=(e.clientX-210)+'px'; mp.style.top=(e.clientY-10)+'px';
+    mp.classList.add('show');
+  }
+  function closeMovePanel(){document.getElementById('movePanel').classList.remove('show');}
+  // ===== 답변 모드 선택 (빠르게/꼼꼼하게/깊게) =====
+  // 사용자 선호도일 뿐, 명령이 아님. 피터가 요청 난이도를 보고 A~G 레벨 자동 판단.
+  const MODE_INFO = {
+    quick:    {label:'빠르게',   ic:'⚡', cls:'active-quick'},
+    together: {label:'꼼꼼하게', ic:'🤝', cls:'active-together'},
+    full:     {label:'깊게',     ic:'🚀', cls:'active-full'}
+  };
+  function toggleModePop(e, scope){
+    e.stopPropagation();
+    const pop = document.getElementById('modePop-'+scope);
+    if(!pop) return;
+    const willShow = !pop.classList.contains('show');
+    // 다른 팝업 모두 닫기
+    document.querySelectorAll('.mode-pop').forEach(p=>p.classList.remove('show'));
+    if(willShow) pop.classList.add('show');
+  }
+  function setWorkMode(scope, mode){
+    const info = MODE_INFO[mode];
+    if(!info) return;
+    // 버튼 라벨/아이콘/색상 갱신
+    const btn = document.getElementById('modeBtn-'+scope);
+    const label = document.getElementById('modeBtnLabel-'+scope);
+    if(btn){
+      btn.classList.remove('active-quick','active-together','active-full');
+      btn.classList.add(info.cls);
+      btn.querySelector('.mb-ic').textContent = info.ic;
+    }
+    if(label) label.textContent = info.label;
+    // 팝업 내 선택 표시(체크) 갱신
+    const pop = document.getElementById('modePop-'+scope);
+    if(pop){
+      const opts = pop.querySelectorAll('.mode-opt');
+      const idx = {quick:0, together:1, full:2}[mode];
+      opts.forEach(o=>o.classList.remove('on'));
+      if(opts[idx]) opts[idx].classList.add('on');
+      pop.classList.remove('show');
+    }
+  }
+  function hideModeSuggest(scope){
+    const el = document.getElementById('modeSuggest-'+scope);
+    if(el) el.classList.remove('show');
+  }
+
+  function showDrop(e,id){e.preventDefault();document.getElementById(id).classList.add('show');}
+  function hideDrop(id){document.getElementById(id).classList.remove('show');}
+
+  // ===== 설정 모달 (⚙ 전체 설정) =====
+  function openSettings(){
+    hideCtx(); closePops();
+    document.getElementById('settingsModal').classList.add('show');
+  }
+  function closeSettings(){
+    document.getElementById('settingsModal').classList.remove('show');
+  }
+  function setTab(e, paneId){
+    e.stopPropagation();
+    document.querySelectorAll('.modal-tabs .mt').forEach(t=>t.classList.remove('on'));
+    e.target.classList.add('on');
+    document.querySelectorAll('.mpane').forEach(p=>p.classList.remove('on'));
+    document.getElementById(paneId).classList.add('on');
+  }
+  // 응답 길이 세그먼트
+  document.querySelectorAll('.seg .so').forEach(so=>{
+    so.addEventListener('click', function(){
+      this.parentElement.querySelectorAll('.so').forEach(x=>x.classList.remove('on'));
+      this.classList.add('on');
+    });
+  });
+
+  // ===== 대화별 프롬프트 (✨) =====
+  function openConvPrompt(){
+    hideCtx(); closePops();
+    document.getElementById('convPromptModal').classList.add('show');
+  }
+  function closeConvPrompt(){
+    document.getElementById('convPromptModal').classList.remove('show');
+  }
+  function updateCpStatus(val){
+    const st = document.getElementById('cpStatus');
+    // 입력값이 있으면 맞춤 적용 상태로
+    const anyFilled = Array.from(document.querySelectorAll('#convPromptModal input, #convPromptModal textarea'))
+      .some(el => el.value.trim() !== '');
+    if(anyFilled){
+      st.className = 'cp-status custom';
+      st.textContent = '● 맞춤 프롬프트 적용 중';
+    } else {
+      st.className = 'cp-status base';
+      st.textContent = '● 기본 설정 사용 중';
+    }
+  }
+
+  // 모달 오버레이 바깥 클릭 시 닫기
+  document.querySelectorAll('.modal-overlay').forEach(ov=>{
+    ov.addEventListener('click', function(e){
+      if(e.target === ov) ov.classList.remove('show');
+    });
+  });
+
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('.float-conv-row')&&!e.target.closest('.sl-convrow')&&!e.target.closest('.popover'))closePops();
+    if(!e.target.closest('.ctx')&&!e.target.classList.contains('pmore')&&!e.target.classList.contains('fmore')&&!e.target.classList.contains('emore')&&!e.target.classList.contains('efmore'))hideCtx();
+    if(!e.target.closest('.move-panel')&&!e.target.textContent.includes('대화 이동'))closeMovePanel();
+    if(!e.target.closest('.mode-pop')&&!e.target.closest('.mode-btn'))document.querySelectorAll('.mode-pop').forEach(p=>p.classList.remove('show'));
+  });
+
+  // init — show app with close state
+  document.getElementById('mainApp').style.display='block';
+  updateModeMemory();
+</script>
+</body>
+</html>
