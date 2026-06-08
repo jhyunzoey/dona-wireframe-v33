@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>피터 — 와이어프레임 v33</title>
+<title>피터 — 와이어프레임 v36</title>
 <style>
   :root{--bg:#f5f6f9;--panel:#fff;--ink:#1f2430;--muted:#9197a6;--muted2:#b7bccb;
     --line:#e6e9f0;--line2:#f0f2f7;--brand:#5b5bd6;--brand-soft:#edecfb;
@@ -123,7 +123,7 @@
     cursor:pointer;position:relative;transition:box-shadow .2s;}
   .dona-entry:hover{box-shadow:0 0 0 3px var(--brand-soft);}
   .dona-entry.active{box-shadow:0 0 0 3px var(--brand-soft);}
-  .dona-entry .ic{width:30px;height:30px;border-radius:8px;background:var(--orange);
+  .dona-entry .ic{width:30px;height:30px;border-radius:8px;background:var(--brand);
     display:grid;place-items:center;color:#fff;font-weight:800;flex-shrink:0;margin-top:1px;}
   .dona-entry .tx{flex:1;min-width:0;}
   .dona-entry .tx .de-top{display:flex;align-items:center;gap:6px;}
@@ -282,7 +282,9 @@
   .dbody{flex:1;overflow:auto;padding:4px 14px 14px;}
   .filecard{border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-bottom:9px;}
   .filecard .fn{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;}
-  .filecard .star{margin-left:auto;color:#f0b429;cursor:pointer;}
+  .filecard .star{margin-left:auto;color:#d1d5db;cursor:pointer;font-size:15px;transition:color .12s;line-height:1;}
+  .filecard .star.on{color:#f0b429;}
+  .filecard .star:hover{color:#f0b429;}
   .filecard .meta{display:flex;align-items:center;gap:8px;margin-top:6px;}
   .filecard .lab{font-size:10px;background:var(--chip);color:#6b7180;padding:2px 6px;border-radius:5px;}
   .filecard .time{font-size:10.5px;color:var(--muted2);}
@@ -290,6 +292,18 @@
   .filecard .acts button{flex:1;border:1px solid var(--line);background:#fafbfd;
     font-family:inherit;font-size:11px;color:#414756;padding:6px;border-radius:7px;cursor:pointer;}
   .filecard .acts button.p{background:var(--brand);color:#fff;border-color:var(--brand);}
+  /* 인라인 파일 행 (확장 우측, 분할 패널 공통) */
+  .file-row{display:flex;align-items:center;gap:8px;padding:9px 12px;
+    border:1px solid var(--line);border-radius:10px;margin-bottom:8px;}
+  .file-row .fr-ic{font-size:14px;flex-shrink:0;}
+  .file-row .fr-name{flex:1;font-size:12.5px;color:var(--ink);min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .file-row .fr-lab{font-size:10px;background:var(--chip);color:#6b7180;
+    padding:2px 6px;border-radius:5px;flex-shrink:0;}
+  .file-row .fr-star{color:#d1d5db;cursor:pointer;font-size:15px;flex-shrink:0;
+    transition:color .12s;line-height:1;}
+  .file-row .fr-star.on{color:#f0b429;}
+  .file-row .fr-star:hover{color:#f0b429;}
 
   /* ===================== EXPANDED MODE ===================== */
   @keyframes expFadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
@@ -634,7 +648,14 @@
   .sec-item{display:flex;align-items:center;gap:8px;border:1px solid var(--line);
     border-radius:10px;padding:10px 12px;margin-bottom:8px;}
   .sec-item .si-key{font-size:12px;font-weight:700;color:var(--ink);width:90px;flex-shrink:0;}
+  /* 암호화 값 영역 */
+  .sec-item .si-val-wrap{flex:1;display:flex;align-items:center;gap:6px;min-width:0;}
   .sec-item .si-val{flex:1;font-size:12px;color:#5b6170;}
+  .sec-item .si-val.masked{font-size:13px;letter-spacing:3px;color:#9aa0b3;}
+  .sec-item .si-eye{font-size:10.5px;font-weight:600;color:var(--muted);cursor:pointer;flex-shrink:0;
+    padding:3px 7px;border-radius:5px;border:1px solid var(--line);background:#fff;
+    transition:all .12s;white-space:nowrap;}
+  .sec-item .si-eye:hover{color:var(--brand);border-color:#cfcef6;background:var(--brand-soft);}
   .sec-item .si-toggle{display:flex;align-items:center;gap:6px;font-size:10.5px;flex-shrink:0;}
   .toggle{width:34px;height:19px;border-radius:20px;background:#cfd3de;position:relative;
     cursor:pointer;transition:background .15s;flex-shrink:0;}
@@ -643,9 +664,28 @@
     border-radius:50%;background:#fff;transition:left .15s;}
   .toggle.on::after{left:17px;}
   .sec-item .si-more{color:var(--muted2);cursor:pointer;padding:2px 6px;flex-shrink:0;}
+  /* 항목 추가 버튼 */
   .add-sec{border:1px dashed var(--brand);color:var(--brand);border-radius:9px;
     padding:9px;font-size:12.5px;font-weight:600;text-align:center;cursor:pointer;margin-top:4px;}
   .add-sec:hover{background:var(--brand-soft);}
+  /* 항목 추가 인라인 폼 */
+  .sec-add-form{border:1px solid var(--brand);border-radius:11px;padding:14px;
+    margin-top:4px;background:#faf9ff;display:none;}
+  .sec-add-form.show{display:block;}
+  .sec-add-form .saf-title{font-size:12px;font-weight:700;color:var(--brand);margin-bottom:10px;}
+  .sec-add-form .saf-row{display:flex;gap:8px;margin-bottom:8px;}
+  .sec-add-form .saf-row input{flex:1;border:1px solid var(--line);border-radius:8px;
+    padding:8px 10px;font-size:12.5px;font-family:inherit;color:var(--ink);background:#fff;}
+  .sec-add-form .saf-row input:focus{outline:none;border-color:var(--brand);}
+  .sec-add-form .saf-row .saf-label{font-size:12px;font-weight:600;color:#5b6170;
+    width:72px;flex-shrink:0;display:flex;align-items:center;}
+  .sec-add-form .saf-warn{font-size:10.5px;color:#b45309;background:#fef3c7;
+    border-radius:6px;padding:5px 9px;margin-bottom:10px;line-height:1.5;}
+  .sec-add-form .saf-btns{display:flex;gap:7px;justify-content:flex-end;}
+  .sec-add-form .saf-btns button{font-family:inherit;font-size:12px;font-weight:600;
+    padding:7px 16px;border-radius:8px;cursor:pointer;}
+  .sec-add-form .saf-btns .saf-cancel{border:1px solid var(--line);background:#fff;color:#5b6170;}
+  .sec-add-form .saf-btns .saf-save{border:1px solid var(--brand);background:var(--brand);color:#fff;}
   .data-row{display:flex;align-items:center;justify-content:space-between;
     border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;}
   .data-row .dr-tx b{font-size:12.5px;color:var(--ink);display:block;}
@@ -927,12 +967,12 @@
       <div class="dfilter"><span class="on">전체</span><span>중요</span><span>업로드</span><span>AI 생성</span><span>링크</span></div>
       <div class="dbody">
         <div class="filecard">
-          <div class="fn">📄 계약서_초안.pdf <span class="star">★</span></div>
+          <div class="fn">📄 계약서_초안.pdf <span class="star on" onclick="this.classList.toggle('on')" title="중요 표시">★</span></div>
           <div class="meta"><span class="lab">업로드</span><span class="time">오늘 10:15</span></div>
           <div class="acts"><button class="p">미리보기</button><button>업무로 보내기</button><button>⋯</button></div>
         </div>
         <div class="filecard">
-          <div class="fn">📄 사업계획서_초안.pdf <span class="star">★</span></div>
+          <div class="fn">📄 사업계획서_초안.pdf <span class="star" onclick="this.classList.toggle('on')" title="중요 표시">★</span></div>
           <div class="meta"><span class="lab">AI 생성</span><span class="time">오늘 14:32</span></div>
           <div class="acts"><button class="p">미리보기</button><button>업무로 보내기</button><button>⋯</button></div>
         </div>
@@ -1167,17 +1207,23 @@
           <span>📤 파일 직접 업로드</span><small>또는 드래그</small>
         </div>
         <div style="padding:0 14px;overflow:auto;flex:1;">
-          <div class="filechip" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;">
-            📄 <span style="flex:1;font-size:12.5px;">계약서_초안.pdf</span>
-            <span class="lab">업로드</span>
+          <div class="file-row">
+            <span class="fr-ic">📄</span>
+            <span class="fr-name">계약서_초안.pdf</span>
+            <span class="fr-lab">업로드</span>
+            <span class="fr-star on" onclick="this.classList.toggle('on')" title="중요 표시">★</span>
           </div>
-          <div class="filechip" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;">
-            📄 <span style="flex:1;font-size:12.5px;">사업계획서_초안.pdf</span>
-            <span class="lab">AI 생성</span>
+          <div class="file-row">
+            <span class="fr-ic">📄</span>
+            <span class="fr-name">사업계획서_초안.pdf</span>
+            <span class="fr-lab">AI 생성</span>
+            <span class="fr-star" onclick="this.classList.toggle('on')" title="중요 표시">★</span>
           </div>
-          <div class="filechip" style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;">
-            🔗 <span style="flex:1;font-size:12.5px;">시장 분석 리포트.link</span>
-            <span class="lab">링크</span>
+          <div class="file-row">
+            <span class="fr-ic">🔗</span>
+            <span class="fr-name">시장 분석 리포트.link</span>
+            <span class="fr-lab">링크</span>
+            <span class="fr-star" onclick="this.classList.toggle('on')" title="중요 표시">★</span>
           </div>
         </div>
       </div>
@@ -1462,8 +1508,18 @@
         <div class="rcard">
           <div class="rtab"><span class="on">파일·자료</span><span>업무로 보냄</span></div>
           <div class="drawer-upload" style="margin:0 0 10px;"><span>📤 파일 직접 업로드</span><small>또는 드래그</small></div>
-          <div class="filechip">📄 계약서_초안.pdf <span class="lab">업로드</span></div>
-          <div class="filechip">📄 사업계획서_초안.pdf <span class="lab">AI 생성</span></div>
+          <div class="file-row">
+            <span class="fr-ic">📄</span>
+            <span class="fr-name">계약서_초안.pdf</span>
+            <span class="fr-lab">업로드</span>
+            <span class="fr-star on" onclick="this.classList.toggle('on')" title="중요 표시">★</span>
+          </div>
+          <div class="file-row">
+            <span class="fr-ic">📄</span>
+            <span class="fr-name">사업계획서_초안.pdf</span>
+            <span class="fr-lab">AI 생성</span>
+            <span class="fr-star" onclick="this.classList.toggle('on')" title="중요 표시">★</span>
+          </div>
         </div>
         <div class="rcard">
           <h6>추천 액션</h6>
@@ -1544,14 +1600,6 @@
           <div class="desc">별도 프롬프트가 없는 모든 대화에 기본으로 적용됩니다.</div>
           <textarea placeholder="나는 도나매니저의 프로덕트 기획자야.&#10;항상 비개발자도 이해할 수 있게 설명하고,&#10;답변은 핵심부터 간결하게 정리해줘."></textarea>
         </div>
-        <div class="field">
-          <label>응답 길이 선호 <span style="color:var(--muted);font-weight:400;">(선택)</span></label>
-          <div class="seg">
-            <div class="so">간결</div>
-            <div class="so on">보통</div>
-            <div class="so">상세</div>
-          </div>
-        </div>
       </div>
       <!-- 탭2: 개인 보안 정보 -->
       <div class="mpane" id="pane-security">
@@ -1559,25 +1607,55 @@
           ⚠ 비밀번호·카드번호·계좌 비밀번호 등 민감 정보는 입력하지 마세요.<br>
           입력한 정보는 암호화되어 보관되며, "피터 참고 허용"을 켠 항목만 답변에 활용됩니다.
         </div>
+        <!-- 회사명 -->
         <div class="sec-item">
           <span class="si-key">회사명</span>
-          <span class="si-val">주식회사 도나</span>
+          <div class="si-val-wrap">
+            <span class="si-val masked" id="sv-company">••••••••••</span>
+            <span class="si-eye" onclick="toggleSecVal('sv-company')" title="값 표시/숨김">보기</span>
+          </div>
           <div class="si-toggle"><div class="toggle on" onclick="this.classList.toggle('on')"></div>참고 허용</div>
           <span class="si-more">⋯</span>
         </div>
+        <!-- 사업자번호 -->
         <div class="sec-item">
           <span class="si-key">사업자번호</span>
-          <span class="si-val">123-45-67890</span>
+          <div class="si-val-wrap">
+            <span class="si-val masked" id="sv-bizno">•••-••-•••••</span>
+            <span class="si-eye" onclick="toggleSecVal('sv-bizno')" title="값 표시/숨김">보기</span>
+          </div>
           <div class="si-toggle"><div class="toggle on" onclick="this.classList.toggle('on')"></div>참고 허용</div>
           <span class="si-more">⋯</span>
         </div>
+        <!-- 대표 메모 -->
         <div class="sec-item">
           <span class="si-key">대표 메모</span>
-          <span class="si-val">정부지원사업 우선 검토 분야: AI·핀테크</span>
+          <div class="si-val-wrap">
+            <span class="si-val masked" id="sv-memo">•••••••••••••••••••••</span>
+            <span class="si-eye" onclick="toggleSecVal('sv-memo')" title="값 표시/숨김">보기</span>
+          </div>
           <div class="si-toggle"><div class="toggle" onclick="this.classList.toggle('on')"></div>참고 허용</div>
           <span class="si-more">⋯</span>
         </div>
-        <div class="add-sec">+ 보안 정보 항목 추가</div>
+        <!-- 항목 추가 버튼 -->
+        <div class="add-sec" onclick="toggleSecAddForm()">+ 보안 정보 항목 추가</div>
+        <!-- 항목 추가 인라인 폼 (클릭 시 펼침) -->
+        <div class="sec-add-form" id="secAddForm">
+          <div class="saf-title">🔒 새 보안 정보 항목</div>
+          <div class="saf-row">
+            <span class="saf-label">항목 이름</span>
+            <input type="text" placeholder="예: 대표자명, 법인 주소, 직함">
+          </div>
+          <div class="saf-row">
+            <span class="saf-label">값</span>
+            <input type="password" placeholder="입력한 값은 암호화되어 저장됩니다">
+          </div>
+          <div class="saf-warn">⚠ 비밀번호·카드번호·금융 정보는 입력하지 마세요.</div>
+          <div class="saf-btns">
+            <button class="saf-cancel" onclick="toggleSecAddForm()">취소</button>
+            <button class="saf-save" onclick="toggleSecAddForm()">저장</button>
+          </div>
+        </div>
       </div>
       <!-- 탭3: 데이터 관리 -->
       <div class="mpane" id="pane-data">
@@ -1927,6 +2005,39 @@
   }
   function closeSettings(){
     document.getElementById('settingsModal').classList.remove('show');
+    const form = document.getElementById('secAddForm');
+    if(form) form.classList.remove('show');
+    // 닫을 때 열려있던 값 다시 마스킹
+    const masks = {'sv-company':'••••••••••','sv-bizno':'•••-••-•••••','sv-memo':'•••••••••••••••••••••'};
+    Object.keys(masks).forEach(id=>{
+      const el = document.getElementById(id);
+      if(el && el.dataset.shown==='true'){
+        el.textContent = masks[id]; el.classList.add('masked'); el.dataset.shown='false';
+      }
+    });
+  }
+  // 보안 값 표시/숨김 토글 (눈 아이콘)
+  const SEC_MASKS = {'sv-company':'••••••••••','sv-bizno':'•••-••-•••••','sv-memo':'•••••••••••••••••••••'};
+  const SEC_VALS  = {'sv-company':'주식회사 도나','sv-bizno':'123-45-67890','sv-memo':'정부지원사업 우선 검토 분야: AI·핀테크'};
+  function toggleSecVal(id){
+    const el = document.getElementById(id);
+    // 같은 sec-item 안의 si-eye 버튼 찾기
+    const btn = el ? el.closest('.si-val-wrap').querySelector('.si-eye') : null;
+    if(!el) return;
+    if(el.dataset.shown==='true'){
+      el.textContent = SEC_MASKS[id]; el.classList.add('masked'); el.dataset.shown='false';
+      if(btn) btn.textContent='보기';
+    } else {
+      el.textContent = SEC_VALS[id]; el.classList.remove('masked'); el.dataset.shown='true';
+      if(btn) btn.textContent='숨기기';
+    }
+  }
+  // 항목 추가 인라인 폼 열기/닫기
+  function toggleSecAddForm(){
+    const form = document.getElementById('secAddForm');
+    if(!form) return;
+    form.classList.toggle('show');
+    if(form.classList.contains('show')) form.querySelectorAll('input').forEach(i=>i.value='');
   }
   function setTab(e, paneId){
     e.stopPropagation();
@@ -1935,13 +2046,6 @@
     document.querySelectorAll('.mpane').forEach(p=>p.classList.remove('on'));
     document.getElementById(paneId).classList.add('on');
   }
-  // 응답 길이 세그먼트
-  document.querySelectorAll('.seg .so').forEach(so=>{
-    so.addEventListener('click', function(){
-      this.parentElement.querySelectorAll('.so').forEach(x=>x.classList.remove('on'));
-      this.classList.add('on');
-    });
-  });
 
   // ===== 대화별 프롬프트 (✨) =====
   function openConvPrompt(){
